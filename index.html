@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>혜성이 지나간 밤</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <canvas id="screen"></canvas>
+    <div id="hint">WASD 이동 · F 조사 · Shift 달리기 · M 지도 · Esc 메뉴</div>
+    <div id="banner"></div>
+    <div id="status"></div>
+    <div id="key-prompt"><span class="key">F</span><span class="label"></span></div>
+    <div id="dialog"><div id="dialog-name"></div><div id="dialog-text"></div><div id="dialog-choices"></div><div id="dialog-next">▼</div></div>
+    <div id="toast"><canvas class="toast-art" width="40" height="30"></canvas><span class="toast-msg"></span></div>
+    <div id="fullmap">
+      <div class="fm-title"></div>
+      <div class="fm-labels"></div>
+      <div class="fm-help">M : 닫기</div>
+    </div>
+    <div id="notebook">
+      <div class="nb-head"><span>단서 수첩</span><span class="nb-count"></span></div>
+      <div class="nb-body">
+        <ol class="nb-list"></ol>
+        <div class="nb-detail">
+          <canvas class="nb-art" width="40" height="30"></canvas>
+          <div class="nb-name"></div>
+          <div class="nb-place"></div>
+          <div class="nb-text"></div>
+        </div>
+      </div>
+      <div class="nb-help">W/S : 고르기 &nbsp;·&nbsp; Tab / Esc : 닫기</div>
+    </div>
+    <div id="menu">
+      <div class="mn-title">메뉴</div>
+      <div class="mn-msg"></div>
+      <ul class="mn-list"></ul>
+      <div class="mn-help">W/S : 고르기 &nbsp;·&nbsp; F : 선택 &nbsp;·&nbsp; Esc : 닫기</div>
+    </div>
+    <div id="devmenu">
+      <div class="mn-title">개발자 메뉴</div>
+      <div class="mn-msg"></div>
+      <ul class="mn-list"></ul>
+      <div class="mn-help">W/S : 고르기 &nbsp;·&nbsp; F : 선택 &nbsp;·&nbsp; ` / Esc : 닫기</div>
+    </div>
+    <div id="experiment">
+      <div class="ex-claim"></div>
+      <div class="ex-bubble"></div>
+      <div class="ex-text"></div>
+      <div class="ex-stats">
+        <div class="ex-focus">빛찬 <span class="lbl">집중력</span> <span class="bar"><i></i></span> <span class="num"></span></div>
+        <div class="ex-cred"><span class="lbl">주장 신뢰도</span> <span class="bar"><i></i></span></div>
+      </div>
+      <div class="ex-buttons"><span>관찰</span><span>실험</span><span>단서</span><span>반박</span></div>
+      <div class="ex-help"></div>
+    </div>
+    <div id="touch">
+      <div class="stick"><i></i></div>
+      <div class="btn f" data-key="interact">F</div>
+      <div class="btn q" data-key="talk">Q</div>
+      <div class="btn sm" data-key="menu" style="--r: 14">☰</div>
+      <div class="btn sm" data-key="map" style="--r: 44">지도</div>
+      <div class="btn sm" data-key="notebook" style="--r: 74">수첩</div>
+    </div>
+    <div id="debug"></div>
+    <div id="chapter"></div>
+    <div id="title">
+      <div class="tt-name">혜성이 지나간 밤</div>
+      <div class="tt-press">아무 키나 누르세요</div>
+    </div>
+  </div>
+
+  <script src="js/art.js"></script>
+  <script src="js/art1986.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/map1986.js"></script>
+  <script src="js/clueart.js"></script>
+  <script src="js/hud.js"></script>
+  <script src="js/experiment.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/touch.js"></script>
+  <script src="js/story.js"></script>
+</body>
+</html>
