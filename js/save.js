@@ -75,7 +75,7 @@ const Save = (() => {
     if (burning) smoke = 'old1';
     if (memory === 'minkyung' && flags.mkFire && !flags.mkDistort) startFireBell();
     setFloor(s.floor, { x: s.x / TILE, y: s.y / TILE, dir: s.dir });
-    // 하율은 저장 당시 자리 그대로, 따라오는 길(trail)만 그 자리에서 다시 시작
+    // 저궁은 저장 당시 자리 그대로, 따라오는 길(trail)만 그 자리에서 다시 시작
     Object.assign(companion, s.companion);
     trail = [{ x: companion.x, y: companion.y }, { x: player.x, y: player.y }];
 

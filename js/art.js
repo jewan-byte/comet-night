@@ -1077,28 +1077,28 @@ const PEOPLE = {
   driver: {
     pal: { ...PLAYER_PAL, hair: '#2a2a2a', hairHi: '#444', blazer: '#8fb3d9', blazerDk: '#6f93b9', tie: '#2f3f73' },
   },
-  // 하율: 빛찬의 친구, 신문부. 밤색 머리 + 목에 건 카메라
+  // 저궁: 비찬의 친구, 신문부. 밤색 머리 + 목에 건 카메라
   friend: {
     pal: { ...PLAYER_PAL, hair: '#7a4128', hairHi: '#a85e38' },
     camera: true,
   },
-  // 오민경 선생님: 과학 교사, 1986년 학보 기자·목격자. 쑥색 카디건
+  // 오미녕 선생님: 과학 교사, 1986년 학보 기자·목격자. 쑥색 카디건
   teacher: {
     pal: { ...PLAYER_PAL, hair: '#2a1e1a', hairHi: '#4a3428', blazer: '#5f7a6a', blazerDk: '#4a6254', shirt: '#f0ece2', pants: '#3a3a44', pantsDk: '#2e2e36' },
     tie: false,
   },
-  // 1986년의 오민경 (1학년, 신문부 기자): 짙은 남색 교복, 넥타이 대신 노란 리본
+  // 1986년의 오미녕 (1학년, 신문부 기자): 짙은 남색 교복, 넥타이 대신 노란 리본
   minkyung86: {
     pal: { ...PLAYER_PAL, hair: '#1e1612', hairHi: '#3a2a20', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#d9b43a' },
   },
-  // 1986년 천문부: 부장 한정우(빛찬의 아빠), 3학년 이도현 — 같은 남색 교복, 자주색 넥타이
+  // 1986년 천문부: 부장 한정우(비찬의 아빠), 3학년 이이노 — 같은 남색 교복, 자주색 넥타이
   jeongwoo86: {
     pal: { ...PLAYER_PAL, hair: '#2a2420', hairHi: '#463a30', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
   },
   dohyun86: {
     pal: { ...PLAYER_PAL, hair: '#15151a', hairHi: '#2e2e38', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
   },
-  // 지금의 이도현 교장: 희끗한 머리, 짙은 양복, 안경
+  // 지금의 이이노 교장: 희끗한 머리, 짙은 양복, 안경
   principal: {
     pal: {
       ...PLAYER_PAL, hair: '#8a8a90', hairHi: '#a8a8b0', blazer: '#2a2e3a', blazerDk: '#1e212b',
@@ -1106,7 +1106,7 @@ const PEOPLE = {
     },
     glasses: true,
   },
-  // 1986년의 박영철: 신임 과학 교사, 둥근 안경, 갈색 재킷
+  // 1986년의 최정연: 신임 과학 교사, 둥근 안경, 갈색 재킷
   youngchul86: {
     pal: {
       ...PLAYER_PAL, hair: '#2a2016', hairHi: '#44362a', blazer: '#6a4a30', blazerDk: '#523822',
@@ -1114,7 +1114,7 @@ const PEOPLE = {
     },
     glasses: true,
   },
-  // 지금의 박영철 박사: 은발, 낙타색 코트, 안경
+  // 지금의 최정연 박사: 은발, 낙타색 코트, 안경
   youngchul: {
     pal: {
       ...PLAYER_PAL, hair: '#c8c8cc', hairHi: '#e4e4e8', blazer: '#a07a50', blazerDk: '#86643e',

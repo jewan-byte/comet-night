@@ -28,7 +28,7 @@ function pastCore(b, { up, down, roof }) {
   }
   b.obj('rail', 33, 25, 1, 7);
   if (up) b.warp(30, 30, 4, 2, { floor: PAST(n + 1), x: 36, y: 25, dir: 'up' });
-  // 옥상 계단: 오민경의 기억에선 4시 전까지 잠겨 있다 (story.js 의 pastRoof)
+  // 옥상 계단: 오미녕의 기억에선 4시 전까지 잠겨 있다 (story.js 의 pastRoof)
   if (roof) b.warps.push({ x: 30, y: 30, w: 4, h: 2, script: 'pastRoof' });
   if (down) {
     b.carve(34, 25, 4, 7, 'stairsDown');
@@ -135,13 +135,13 @@ function buildPast1F() {
   b.obj('shoelocker', 12, 23, 2, 1);
   b.dec('mat', 6, 30, 4, 2);
 
-  // 박영철의 기억: 원판 상자를 안고 현관으로 나가면 끝 (story.js 의 pastEntrance)
+  // 최정연의 기억: 원판 상자를 안고 현관으로 나가면 끝 (story.js 의 pastEntrance)
   b.warps.push({ x: 2, y: 22, w: 12, h: 10, script: 'pastEntrance' });
 
   // 숙직실 (2026년의 기록 보관실 자리)
   b.room('숙직실', 16, 22, 12, 9, 'wood');
   b.carve(26, 20, 2, 2, 'door');
-  b.dec('dutyboard', 20, 21, 4, 1, look('숙직 당번표.', '"3월 21일(금) 숙직 — 박영철"'));
+  b.dec('dutyboard', 20, 21, 4, 1, look('숙직 당번표.', '"3월 21일(금) 숙직 — 최정연"'));
   b.obj('bed', 17, 23, 2, 3, look('펼쳐 놓은 이불.', '…비어 있다. 이불이 차갑게 식어 있다.'));
   b.obj('dutydesk', 22, 23, 2, 2, look('다이얼 전화기와 작은 라디오.', '라디오에서 지직거리는 심야 방송이 흘러나온다.'));
   b.obj('bookshelf', 24, 28, 3, 1);
@@ -211,10 +211,10 @@ function buildPast2F() {
     b.obj('stool', sx, 29);
   }
   b.obj('boombox', 14, 23, 2, 1, look('커다란 라디오 카세트 녹음기. 빨간 녹음 불이 깜빡인다.', '카운터 숫자가 천천히 올라가고 있다.'));
-  // 오민경의 기억: 음악실에 들어서면 관악부 선배들 장면
+  // 오미녕의 기억: 음악실에 들어서면 관악부 선배들 장면
   b.warps.push({ x: 2, y: 22, w: 26, h: 9, script: 'mkMusic', once: 'mkMusic' });
 
-  // 이도현의 기억: 2층 계단참을 지날 때마다 음악실 관악부가 말을 건다 (story.js 의 pastHall2)
+  // 이이노의 기억: 2층 계단참을 지날 때마다 음악실 관악부가 말을 건다 (story.js 의 pastHall2)
   // 층을 오가려면 반드시 지나는 자리라서, 녹음될 왕복 대화를 건너뛸 수 없다
   b.warps.push({ x: 30, y: 20, w: 8, h: 10, script: 'pastHall2' });
 
@@ -243,7 +243,7 @@ function buildPast3F() {
   pastTopClassroom(b, '3학년 4반', 50, 12);
   pastBottomClassroom(b, '3학년 5반', 2);
 
-  // 이도현의 기억: 원판을 들고 3층 계단에 올라오면 아래층에서 폭발음 (story.js 의 pastStairs3)
+  // 이이노의 기억: 원판을 들고 3층 계단에 올라오면 아래층에서 폭발음 (story.js 의 pastStairs3)
   b.warps.push({ x: 30, y: 22, w: 8, h: 8, script: 'pastStairs3' });
 
   // 신문부실
@@ -280,7 +280,7 @@ function buildPastRoof() {
   b.obj('stool', 20, 11);
   b.obj('lampstool', 24, 11, 1, 1, look('의자 위에서 알코올램프가 조용히 타고 있다.', '렌즈에 이슬이 맺히지 않게 켜 둔 거라고 했다.'));
   b.obj('stool', 26, 11);
-  // 오민경의 기억: 옥상에 올라오면 인터뷰 장면
+  // 오미녕의 기억: 옥상에 올라오면 인터뷰 장면
   b.warps.push({ x: 2, y: 3, w: 36, h: 19, script: 'mkRoof', once: 'mkRoof' });
   b.light(7, 8.5, 22, '255,210,140');   // 천문대 문틈으로 새는 불빛
 

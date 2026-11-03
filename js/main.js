@@ -54,7 +54,7 @@ for (const key of ['home', 1, 2, 3]) {
     CLUES.push(s.clue);
   }
 }
-// 회상 속에선 다른 사람(예: 1986년의 오민경)이 된다 — who: PEOPLE 이름, null 이면 빛찬
+// 회상 속에선 다른 사람(예: 1986년의 오미녕)이 된다 — who: PEOPLE 이름, null 이면 비찬
 let playerFrames = makePlayerFrames();
 function setPlayerLook(who) {
   playerFrames = who ? makePersonFrames(PEOPLE[who].pal, PEOPLE[who]) : makePlayerFrames();
@@ -65,7 +65,7 @@ let floor = FLOORS.home;
 const player = { x: 0, y: 0, dir: 'down', anim: 0, moving: false, scriptAnim: 0 };
 let cutscene = false;   // 컷신 중엔 움직이거나 조사할 수 없다 (대사 넘기기만 가능)
 
-// 동료(하율): floor 층에 visible 이면 보이고, following 이면 플레이어가 지나간 길을 따라온다
+// 동료(저궁): floor 층에 visible 이면 보이고, following 이면 플레이어가 지나간 길을 따라온다
 const companion = { visible: false, following: false, floor: 1, x: 0, y: 0, dir: 'down', anim: 0, moving: false, moveTimer: 0 };
 const COMPANION_GAP = 17;     // 플레이어 뒤로 얼마나(px) 떨어져서 따라오는지 (걸을 땐 조금 더 벌어진다)
 const COMPANION_EASE = 9;     // 클수록 바짝, 작을수록 느긋하게 따라온다
@@ -457,8 +457,8 @@ function pickMenu(id) {
     case 'controls':
       Controls.toggle();
       Menu.show(menuItems(), Controls.mode === 'touch'
-        ? '왼쪽 조이스틱으로 이동, 끝까지 밀면 달리기.\nF 조사 · Q 하율 · ☰ 메뉴 · 수첩 · 지도'
-        : 'WASD 이동 · Shift 달리기 · F 조사\nQ 하율 · Tab 수첩 · M 지도 · Esc 메뉴', 5);
+        ? '왼쪽 조이스틱으로 이동, 끝까지 밀면 달리기.\nF 조사 · Q 저궁 · ☰ 메뉴 · 수첩 · 지도'
+        : 'WASD 이동 · Shift 달리기 · F 조사\nQ 저궁 · Tab 수첩 · M 지도 · Esc 메뉴', 5);
       break;
     case 'reset':
       Menu.show(
@@ -593,7 +593,7 @@ function update(dt) {
       runScript('friend');
       return;
     }
-    Toast.show(flags.memory ? '하율이 없는 기억 속' : '하율은 지금 3층 신문부실에 있다.');
+    Toast.show(flags.memory ? '저궁이 없는 기억 속' : '저궁은 지금 3층 신문부실에 있다.');
   }
 
   const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
@@ -759,7 +759,7 @@ function draw() {
       `FPS ${Math.round(fps)}  (프레임 ${(1000 / fps).toFixed(1)}ms)\n` +
       `${floor.map.label} [${floor.map.n}]  타일 ${tx},${ty}  ${currentRegion ? currentRegion.name : '-'}\n` +
       `단서 ${CLUES.filter(c => c.found).length}/${CLUES.length}  컷신 ${cutscene ? 'O' : 'X'}\n` +
-      `숨은 값: 증거 ${route.evidence} · 기사 ${route.article} · 마음 민경 ${route.heart.minkyung} 도현 ${route.heart.dohyun} 아빠 ${route.heart.dad}\n` +
+      `숨은 값: 증거 ${route.evidence} · 기사 ${route.article} · 마음 미녕 ${route.heart.minkyung} 이노 ${route.heart.dohyun} 아빠 ${route.heart.dad}\n` +
       `플래그: ${on || '-'}`,
     );
   }
