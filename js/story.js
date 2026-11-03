@@ -76,7 +76,7 @@ function resetFlags() {
     dhBandDown: false,   // 기억 속: 내려가며 관악부 인사 (4:24, 녹음됨)
     dhBandUp: false,     // 기억 속: 올라오며 "박 선생님 계시죠?" (4:28, 녹음됨)
     dhGotPlates: false,  // 기억 속: 새 원판 상자를 들고 과학준비실을 나옴
-    dhFire: false,       // 기억 속: 3층 계단에서 '펑'
+    dhFire: false,       // 기억 속: 3층 계단에서 폭발음
     dhFought: false,     // 기억 속: 불을 끄려다 정우를 만남
     dhDone: false,       // 기억에서 돌아와 선택까지 끝남 → 녹음 검증으로
     dhSound: false,      // 소리 분석 검증 시작 (→ 숨긴 기억 → 박영철의 이름)
@@ -1804,14 +1804,14 @@ const SCRIPTS = {
     );
   },
 
-  // 3층 계단 (이도현의 기억): 원판을 들고 올라오면 아래층에서 '펑'
+  // 3층 계단 (이도현의 기억): 원판을 들고 올라오면 아래층에서 폭발음
   async pastStairs3() {
     if (flags.memory !== 'dohyun' || !flags.dhGotPlates || flags.dhFire) return;
     flags.dhFire = true;
     Sound.sfx('hit');
     smoke = 'old1';
     await say(
-      '펑—!',
+      '— 폭발음!',
       '…아래층에서 뭔가 터지는 소리.',
       '원판 상자를 계단에 내려놓고, 다시 뛰어 내려갔다.',
     );

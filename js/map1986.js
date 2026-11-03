@@ -243,7 +243,7 @@ function buildPast3F() {
   pastTopClassroom(b, '3학년 4반', 50, 12);
   pastBottomClassroom(b, '3학년 5반', 2);
 
-  // 이도현의 기억: 원판을 들고 3층 계단에 올라오면 아래층에서 '펑' (story.js 의 pastStairs3)
+  // 이도현의 기억: 원판을 들고 3층 계단에 올라오면 아래층에서 폭발음 (story.js 의 pastStairs3)
   b.warps.push({ x: 30, y: 22, w: 8, h: 8, script: 'pastStairs3' });
 
   // 신문부실
