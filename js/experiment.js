@@ -269,7 +269,7 @@ const MINIGAMES = {
                 '별이 아니다. 이건… 또 하나의 혜성이다.',
                 { who: ME, text: '천문부 원판 #12. 1986년 3월 21일 새벽 4시 25분, 아빠가 찍은 마지막 한 장.' },
                 { who: ME, text: '3월 22일보다 하루 먼저, 천문부 원판엔 이미 이 혜성이 찍혀 있었어요.' },
-                '"내가 처음 발견했다"는 주장이 크게 흔들렸다!',
+                '"천문부 원판엔 아무것도 없었다"는 주장이 크게 흔들렸다!',
               ],
             };
           }
@@ -570,8 +570,11 @@ const Experiment = (() => {
     const data = st.data;
     say([...pages, retort()], () => {
       if (st.mind > 0) return toMenu();
+      // 처음부터 다시 정리하되, 미니게임에서 이미 해낸 단계(예: 현상 성공)는 남겨 둔다
+      const checkpoint = st.miniSaved;
       say(['머리가 지끈거린다. 생각이 엉켜 버렸다…', '심호흡을 하고, 처음부터 다시 정리하자.'], () => {
         st = fresh(data);
+        st.miniSaved = checkpoint;
         say(data.intro, toMenu);
       });
     });
