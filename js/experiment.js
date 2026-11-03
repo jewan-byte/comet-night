@@ -234,22 +234,28 @@ const MINIGAMES = {
           m.c = Math.max(C0, Math.min(C1, m.c + dx * 60 * dt * (keys.has('run') ? 2.5 : 1)));
           if (tapped.has('interact')) {
             const e = eventAt(m.c);
+            if (e) m.c = e.c;   // 그 소리가 시작되는 자리로 맞춘다 (시각이 해설과 어긋나지 않게)
             m.heard = e ? e.label : '…합주 소리뿐이다.';
-            m.heardAt = m.c;
             if (e && !m.found.has(e.id)) {
               m.found.add(e.id);
               Sound.sfx('good');
             } else {
               Sound.sfx('move');
             }
-            if (m.found.size === EVENTS.length) {
+            // 다 찾았으면 질문으로 (다시 듣다가 사건 위에서 F 를 눌러도)
+            if (m.found.size === EVENTS.length && (!e || m.found.has(e.id))) {
               m.phase = 'quiz';
               m.t = 0;
             }
           }
           return null;
         }
-        // 질문: 고르고 F
+        // 질문: 고르고 F, Esc 면 파형으로 돌아가 다시 듣는다
+        if (tapped.has('menu')) {
+          m.phase = 'scan';
+          m.heard = '파형으로 돌아왔다. 다 찾았으면 F로 다시 질문에 답하자.';
+          return null;
+        }
         const d = (tapped.has('down') || tapped.has('right') ? 1 : 0) - (tapped.has('up') || tapped.has('left') ? 1 : 0);
         if (d) {
           m.pick = (m.pick + d + QUIZ.options.length) % QUIZ.options.length;
@@ -262,7 +268,8 @@ const MINIGAMES = {
               pages: [
                 '4시 24분, 내려가는 인사. 4시 28분, 올라오는 대답 — "응, 암실에."',
                 '그리고 4시 31분, 펑. 4시 33분, 화재벨.',
-                { who: ME, text: '선생님은 불이 나기 3분 전에 이미 준비실을 나와 계단을 오르고 있었어요.' },
+                { who: ME, text: '선생님은 "펑" 소리가 들리기 3분 전에 이미 준비실을 나와 계단을 오르고 계셨어요.' },
+                { who: ME, text: '불이 시작된 곳은 선반이 아니라 콘센트였고, 그날 램프는 옥상에 있었어요.' },
                 { who: ME, text: '그리고 "암실에" 누가 있었는지… 직접 대답하셨어요.' },
                 '증언의 신뢰도가 크게 무너졌다!',
               ],
@@ -312,6 +319,14 @@ const MINIGAMES = {
           rect(g, x, oy + WAVE.y + WAVE.h + 3, 1, 3, '#6f84a6');
           g.fillStyle = '#6f84a6';
           g.fillText(time(c).replace('시 ', ':').replace('분', ''), x - 10, oy + WAVE.y + WAVE.h + 12);
+        }
+        // 찾은 순간: 파형 위에 기준 시각을 달아 둔다
+        for (const e of EVENTS) {
+          if (!m.found.has(e.id)) continue;
+          const ex = Math.round(ox + xOf(e.c));
+          rect(g, ex, oy + WAVE.y - 4, 1, 4, '#ffe066');
+          g.fillStyle = '#ffe066';
+          g.fillText(time(e.c).replace('시 ', ':').replace('분', ''), ex - 10, oy + WAVE.y - 9);
         }
         // 재생 위치
         const hx = Math.round(ox + xOf(m.c));

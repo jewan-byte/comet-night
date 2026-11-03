@@ -478,7 +478,7 @@ function buildHome() {
   b.obj('tv', 15, 4, 3, 1);
   b.obj('sofa', 15, 8, 4, 1);
   b.dec('window', 20, 2, 2, 2);
-  b.dec('clock', 23, 2, 1, 2, look('7시 52분.', '…버스 시간이 빠듯하다.'));
+  b.dec('clock', 23, 2, 1, 2, { script: 'homeClock', prompt: '조사하기' });   // 아침·저녁마다 다르다 (story.js)
   b.dec('window', 25, 2, 2, 2);
   b.obj('counter', 24, 4, 4, 1);
   b.obj('fridge', 28, 4, 2, 1);

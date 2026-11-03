@@ -293,7 +293,7 @@ const EXPERIMENTS = {
   sound: {
     title: '소리 분석',
     mini: 'sound',
-    miniHelp: 'A/D : 감기  ·  Shift : 빨리 감기  ·  F : 듣기',
+    miniHelp: 'A/D : 감기  ·  Shift : 빨리  ·  F : 듣기  ·  질문에서 Esc : 다시 듣기',
     portrait: 'dohyun86',
     prop: 'lamp',
     speaker: '기억 속 도현',
@@ -639,6 +639,12 @@ const SCRIPTS = {
     } else {
       await say({ who: '아빠', text: '다 먹었으면 얼른 가. 버스 놓친다.' });
     }
+  },
+
+  // 집 거실 시계
+  async homeClock() {
+    if (flags.day2Evening) await say('9시 40분.', '…금요일까지, 사흘.');
+    else await say('7시 52분.', '…버스 시간이 빠듯하다.');
   },
 
   // 사진에 대해 묻기
@@ -1584,7 +1590,7 @@ const SCRIPTS = {
     flags.dhDone = true;
     if (hasClue('카세트테이프')) {
       await say(
-        { who: ME, text: '…잠깐만요. 그 테이프, 저 어제 음악실에서 챙겨 뒀어요.' },
+        { who: ME, text: '…잠깐만요. 그 테이프, 저 이미 음악실에서 챙겨 뒀어요.' },
         { who: FRIEND, text: '역시! 과학탐구부 부장님.' },
       );
       await SCRIPTS.dhSound();
@@ -1708,16 +1714,18 @@ const SCRIPTS = {
       { who: '아빠', text: '왔어? 늦었네.' },
     );
     const tell = await choose(
-      ['아빠에게 오늘 일을 말할까?'],
-      ['"아빠. 오늘 이도현 교장 선생님을 만났어."', '"…응. 동아리 정리하느라."'],
+      ['오늘 들은 걸 아빠에게 말할까?'],
+      ['"아빠. 교장 선생님한테 다 들었어. 박영철 얘기까지."', '"…응. 동아리 정리하느라."'],
     ) === 0;
     flags.toldDad = tell;
     if (tell) {
       addHeart('dad', 1);
       await say(
+        { who: ME, text: '오늘 이도현 교장 선생님을 만났어. 그날 밤 암실에 박영철 선생님이 있었대.' },
+        { who: ME, text: '천문부 원판을 가방에 넣고 있었고… 도현 선생님을 장학금으로 협박했대.' },
         '아빠의 손이 멈췄다.',
-        { who: '아빠', text: '……도현이를.' },
-        { who: ME, text: '그날 밤 얘기도 들었어. 아빠가 왜 아무 말도 안 했는지는… 아직 모르겠지만.' },
+        { who: '아빠', text: '……도현이가, 그 얘기를.' },
+        { who: '아빠', text: '…박영철. 그 이름을 네 입으로 듣게 될 줄은 몰랐다.' },
         '아빠는 한참 동안 꺼진 텔레비전 화면만 바라보았다.',
         { who: '아빠', text: '…빛찬아. 금요일까지만, 기다려 줄 수 있겠니.' },
         { who: '아빠', text: '그날 밤이 지나면, 다 얘기할게. 약속하마.' },
