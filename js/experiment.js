@@ -540,13 +540,19 @@ const MINIGAMES = {
           g.fillText(time(c).replace('시 ', ':').replace('분', ''), x - 10, oy + WAVE.y + WAVE.h + 12);
         }
         // 찾은 순간: 파형 위에 기준 시각을 달아 둔다
-        for (const e of EVENTS) {
-          if (!m.found.has(e.id)) continue;
+        // 가까이 붙은 두 순간(4:31 폭발음, 4:33 화재벨)은 글자가 겹치지 않게 앞은 왼쪽, 뒤는 오른쪽으로 비켜 쓴다
+        const NEAR = 30;
+        EVENTS.forEach((e, i) => {
+          if (!m.found.has(e.id)) return;
           const ex = Math.round(ox + xOf(e.c));
+          const prev = EVENTS[i - 1], next = EVENTS[i + 1];
+          const nearNext = next && xOf(next.c) - xOf(e.c) < NEAR;
+          const nearPrev = prev && xOf(e.c) - xOf(prev.c) < NEAR;
+          const lx = nearNext ? ex - 16 : nearPrev ? ex + 2 : ex - 10;
           rect(g, ex, oy + WAVE.y - 4, 1, 4, '#ffe066');
           g.fillStyle = '#ffe066';
-          g.fillText(time(e.c).replace('시 ', ':').replace('분', ''), ex - 10, oy + WAVE.y - 9);
-        }
+          g.fillText(time(e.c).replace('시 ', ':').replace('분', ''), lx, oy + WAVE.y - 9);
+        });
         // 재생 위치
         const hx = Math.round(ox + xOf(m.c));
         rect(g, hx, oy + WAVE.y - 6, 1, WAVE.h + 12, '#ff6a6a');
