@@ -110,13 +110,14 @@ function buildPast1F() {
   b.carve(55, 14, 2, 2, 'door');
   b.carve(50, 8, 2, 2, 'door');
   b.obj('shelf', 52, 4, 3, 1);
-  b.dec('clock', 55, 2, 1, 2, look('벽시계가 째깍째깍 돌아가고 있다.', '4시 23분.'));
+  // 시계·난로·멀티탭은 누구의 기억이냐에 따라 보이는 게 다르다 (story.js 의 pastPrepLook)
+  b.dec('clock', 55, 2, 1, 2, { script: 'pastPrepLook', look: 'clock', prompt: '조사하기' });
   b.dec('safelight', 56, 2, 1, 2, look('빨간 안전등. 준비실 전체가 붉게 물들어 있다.', '…여기를 암실로 쓰고 있었구나.'));
   b.dec('dryline', 57, 2, 3, 2, look('줄에 사진들이 빨래집게로 걸려 마르고 있다.', '새까만 밤하늘에 별이 점점이 찍힌 사진들.'));
   b.obj('cabinet', 60, 4, 2, 1, look('서류함. 맨 아래 칸의 "천문부" 이름표가 아직 새것이다.'));
   b.obj('devtable', 55, 8, 3, 2, look('현상액 쟁반 세 개가 나란히 놓여 있다.', '시큼한 약품 냄새. 첫 번째 쟁반 속에서 사진 한 장이 천천히 떠오르고 있다.'));
-  b.obj('heater', 52, 10, 1, 1, look('전기난로가 시뻘겋게 달아올라 있다.', '3월 새벽이라지만… 이건 너무 뜨겁다.'));
-  b.dec('powerstrip', 52, 11, 1, 1, look('콘센트에 문어발 멀티탭.', '플러그가 빽빽하게 꽂혀 있다. 전선이 미지근하다.'));
+  b.obj('heater', 52, 10, 1, 1, { script: 'pastPrepLook', look: 'heater', prompt: '조사하기' });
+  b.dec('powerstrip', 52, 11, 1, 1, { script: 'pastPrepLook', look: 'strip', prompt: '조사하기' });
   b.obj('boxes', 60, 12);
   b.obj('boxes', 61, 12);
   b.obj('boxes', 61, 11);
@@ -210,8 +211,9 @@ function buildPast2F() {
   // 오민경의 기억: 음악실에 들어서면 관악부 선배들 장면
   b.warps.push({ x: 2, y: 22, w: 26, h: 9, script: 'mkMusic', once: 'mkMusic' });
 
-  // 이도현의 기억: 음악실 앞 복도를 지날 때 관악부가 말을 건다 (story.js 의 pastHall2)
-  b.warps.push({ x: 20, y: 16, w: 10, h: 4, script: 'pastHall2' });
+  // 이도현의 기억: 2층 계단참을 지날 때마다 음악실 관악부가 말을 건다 (story.js 의 pastHall2)
+  // 층을 오가려면 반드시 지나는 자리라서, 녹음될 왕복 대화를 건너뛸 수 없다
+  b.warps.push({ x: 30, y: 20, w: 8, h: 10, script: 'pastHall2' });
 
   pastBottomClassroom(b, '2학년 5반', 40);
 

@@ -342,7 +342,7 @@ function setupDay2(at = DAY2_START) {
   companion.visible = true;
   companion.following = true;
   setFloor(1, at);
-  if (!actors.some(a => a.floor === 1)) addActor('principal', 57.5, 23.6, 'down', 1);
+  if (!actors.some(a => a.who === 'principal')) addActor('principal', 57.5, 23.6, 'down', 1);
 }
 
 const hasClue = name => CLUES.some(c => c.name === name && c.found);
@@ -374,12 +374,12 @@ const walkCompanion = (x, y, sec) => walkActor(companion, x, y, sec);
 let storyRun = 0;
 
 // 컷신: 실행 중엔 플레이어가 못 움직인다
-async function runScript(name) {
+async function runScript(name, arg) {
   if (cutscene) return;
   cutscene = true;
   const run = storyRun;
   try {
-    await SCRIPTS[name]();
+    await SCRIPTS[name](arg);
   } catch (e) {
     if (e !== STOP) throw e;
   } finally {
@@ -1221,6 +1221,7 @@ const SCRIPTS = {
     await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
     await showChapter('2026년 11월 3일 화요일\n점심시간', 2.2);
     flags.day2 = true;
+    actors.length = 0;   // 전날 과학실의 인물은 정리
     setupDay2();
     await fadeInAsync();
     await say(
@@ -1313,7 +1314,8 @@ const SCRIPTS = {
     if (!flags.dhGotPlates && !flags.dhBandDown) {
       flags.dhBandDown = true;
       await say(
-        '음악실 문틈으로 트럼펫 소리가 새어 나온다.',
+        '2층 계단참. 음악실 쪽에서 트럼펫 소리가 새어 나온다.',
+        '관악부 후배 하나가 복도로 고개를 내밀었다.',
         { who: '관악부', text: '어, 도현 선배! 이 시간에 어디 가요?' },
         { who: '도현', text: '쉿. 금방 올라가.' },
       );
@@ -1324,6 +1326,18 @@ const SCRIPTS = {
         '…나는 대답하지 않고 계단을 올랐어.',
       );
     }
+  },
+
+  // 1986년 준비실의 시계·난로·멀티탭: 누구의 기억이냐에 따라 보이는 게 다르다
+  //   이도현의 기억(말한 대로)에선 어두워서 잘 보이지 않는다 — 전기 설비의 해석은 현재의 몫
+  async pastPrepLook(r) {
+    const dohyun = flags.memory === 'dohyun';
+    const LOOK = {
+      clock: dohyun ? ['벽시계. 어두워서 바늘이 잘 안 보인다.', '4시 반쯤… 이었을까.'] : ['벽시계가 째깍째깍 돌아가고 있다.'],
+      heater: dohyun ? ['바닥 쪽에서 뭔가 웅웅거린다.', '…어두워서 잘 보이지 않는다.'] : ['전기난로가 시뻘겋게 달아올라 있다.', '3월 새벽이라지만… 이건 너무 뜨겁다.'],
+      strip: dohyun ? ['발에 전선이 걸렸다. 서둘러야 한다.'] : ['콘센트에 문어발 멀티탭.', '플러그가 빽빽하게 꽂혀 있다. 전선이 미지근하다.'],
+    };
+    await say(...LOOK[r.look]);
   },
 
   // 1층 준비실 안 (이도현의 기억): "아무도 없었다" — 작업대 앞자리가 지지직거린다

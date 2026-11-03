@@ -387,7 +387,7 @@ function examine() {
   if (!target) return;
   const r = target.ref;
   if (r.elevator) return useElevator();
-  if (r.script) return runScript(r.script);   // 사람에게 말 걸기 등 (story.js)
+  if (r.script) return runScript(r.script, r);   // 사람에게 말 걸기, 상황마다 달라지는 조사 (story.js)
   // 이야기 조건이 맞으면 평소 대사 대신 이벤트 (예: 1장 마무리 서랍)
   if (r.event && flags[r.event.when] && !flags[r.event.done]) return runScript(r.event.script);
   const closed = openDialog(r.text);
@@ -404,7 +404,7 @@ function examine() {
 const actors = [];
 function addActor(who, x, y, dir, floorKey) {
   const a = {
-    frames: makePersonFrames(PEOPLE[who].pal, PEOPLE[who]),
+    who, frames: makePersonFrames(PEOPLE[who].pal, PEOPLE[who]),
     x: x * TILE, y: y * TILE, dir, floor: floorKey, moving: false, anim: 0,
   };
   actors.push(a);
@@ -719,7 +719,7 @@ function draw() {
   if (showPrompt) {
     keyPrompt.style.setProperty('--x', px + 9 - camX);
     keyPrompt.style.setProperty('--y', py - 16 - camY);
-    keyPromptLabel.textContent = lit.ref.elevator ? '엘리베이터 타기' : lit.ref.script ? '말 걸기' : '조사하기';
+    keyPromptLabel.textContent = lit.ref.prompt || (lit.ref.elevator ? '엘리베이터 타기' : lit.ref.script ? '말 걸기' : '조사하기');
   }
 
   // 지금 하고 있는 일: 화면을 가리는 게 없을 때만
