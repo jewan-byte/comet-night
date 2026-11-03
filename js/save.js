@@ -69,8 +69,9 @@ const Save = (() => {
       startFireBell();
     }
     setFloor(s.floor, { x: s.x / TILE, y: s.y / TILE, dir: s.dir });
+    // 하율은 저장 당시 자리 그대로, 따라오는 길(trail)만 그 자리에서 다시 시작
     Object.assign(companion, s.companion);
-    if (companion.following) placeCompanionBehind();
+    trail = [{ x: companion.x, y: companion.y }, { x: player.x, y: player.y }];
 
     if (flags.ch2Started && !flags.ch2Intro) addActor('teacher', 39.5, 9, 'down', 1);
     if (inMemory && flags.mkMusic && !flags.mkFire) {
