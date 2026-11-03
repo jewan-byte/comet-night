@@ -776,7 +776,7 @@ function statusLines() {
     let now = '옥상 관측회를 취재하러 가는 중';
     if (flags.mkFire) now = '불이 났다 — 1층으로!';
     else if (flags.mkMusic) now = '4시 — 옥상으로 가는 중';
-    else if (flags.mkSawNote) now = '4시까지 숨어 있을 곳을 찾는 중 (아래층에서 음악 소리)';
+    else if (flags.mkSawNote) now = '4시까지 숨어 있을 곳을 찾는 중 (아래층의 음악 소리)';
     return [{ text: '오민경의 기억 — 1986년 3월 21일 새벽' }, { text: now }];
   }
   if (flags.memory === 'dohyun') {
