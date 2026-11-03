@@ -194,6 +194,130 @@ const MINIGAMES = {
     };
   })(),
 
+  // 원판 현상: 40년 동안 현상되지 않은 원판 #12를 현상액에서 알맞은 순간에 꺼내고(타이밍),
+  //   음화(밤하늘이 투명, 별이 검은 점)에서 핼리 말고 "또 하나의 혜성"을 찾아낸다
+  plate: (() => {
+    const W = 282, H = 142;
+    const DEV_TIME = 6;                       // 현상 막대가 다 차는 데 걸리는 시간(초)
+    const GOOD = [0.56, 0.76];                // 꺼내기 좋은 구간
+    const P = { x: 70, y: 14, w: 142, h: 104 };   // 원판 그림 자리
+    const HALLEY = { x: 52, y: 40 }, NEW = { x: 104, y: 70 };   // 원판 안 좌표
+    const stars = Array.from({ length: 46 }, (_, i) => ({ x: Math.floor(hash(i, 2, 31) * P.w), y: Math.floor(hash(2, i, 32) * P.h), s: hash(i, i, 33) < 0.2 ? 2 : 1 }));
+    const near = (m, o, r) => Math.hypot(m.cx - o.x, m.cy - o.y) <= r;
+
+    function drawPlate(g, ox, oy, dev, t) {
+      const x0 = ox + P.x, y0 = oy + P.y;
+      // 유리판 (투명한 바탕일수록 현상이 덜 된 것) — dev: 0(흐림)~1(진함)
+      rect(g, x0 - 2, y0 - 2, P.w + 4, P.h + 4, '#5a5a62');
+      rect(g, x0, y0, P.w, P.h, '#d8dcd0');
+      g.save();
+      g.globalAlpha = Math.min(1, dev);
+      for (const s of stars) rect(g, x0 + s.x, y0 + s.y, s.s, s.s, '#1a1a1e');
+      // 핼리: 크고 진한 머리 + 긴 꼬리
+      rect(g, x0 + HALLEY.x - 2, y0 + HALLEY.y - 2, 5, 5, '#121216');
+      for (let i = 0; i < 22; i++) rect(g, x0 + HALLEY.x - 3 - i, y0 + HALLEY.y - 1 - (i >> 2), 1, 2 + (i >> 3), 'rgba(18,18,22,0.6)');
+      // 새 혜성: 작고 흐린 머리 + 짧은 꼬리 (dev 가 충분해야 보인다)
+      g.globalAlpha = Math.max(0, Math.min(1, (dev - 0.45) * 2.2));
+      rect(g, x0 + NEW.x - 1, y0 + NEW.y - 1, 3, 3, '#2a2a30');
+      for (let i = 0; i < 9; i++) rect(g, x0 + NEW.x + 2 + i, y0 + NEW.y + (i >> 2), 1, 1, 'rgba(30,30,36,0.5)');
+      g.restore();
+      // 천문부 원판의 표시: 모서리 V자 흠 + 긁어 쓴 번호
+      rect(g, x0 + P.w - 9, y0, 9, 1, '#5a5a62');
+      for (let i = 0; i < 5; i++) rect(g, x0 + P.w - 9 + i, y0 + i, 1, 1, '#5a5a62');
+      for (let i = 0; i < 5; i++) rect(g, x0 + P.w - 1 - i, y0 + i, 1, 1, '#5a5a62');
+      g.font = WORD_FONT;
+      g.textBaseline = 'top';
+      g.fillStyle = '#5a5a62';
+      g.fillText('#12', x0 + 3, y0 + P.h - 12);
+    }
+
+    return {
+      init: saved => saved || { phase: 'dev', t: 0, cx: 70, cy: 50, msg: null },
+
+      update(m, dt) {
+        m.t += dt;
+        if (m.phase === 'dev') {
+          const p = m.t / DEV_TIME;
+          if (tapped.has('interact') || p >= 1.15) {
+            if (p >= GOOD[0] && p <= GOOD[1]) {
+              m.phase = 'scan';
+              m.dev = p / GOOD[1];
+              Sound.sfx('good');
+              return null;
+            }
+            const early = p < GOOD[0];
+            return {
+              dmg: 0, miss: true, keep: { phase: 'dev', t: 0, cx: 70, cy: 50, msg: null },
+              pages: early
+                ? ['너무 일찍 꺼냈다. 상이 거의 떠오르지 않았다.', '…다행히 가장자리 시험 조각이었다. 다시 해 보자.']
+                : ['너무 오래 담갔다. 시험 조각이 새까맣게 타 버렸다.', '본판은 무사하다. 다시 해 보자.'],
+            };
+          }
+          return null;
+        }
+        // 판독: WASD 로 돋보기를 옮기고 F
+        const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+        const dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
+        m.cx = Math.max(0, Math.min(P.w, m.cx + dx * 60 * dt));
+        m.cy = Math.max(0, Math.min(P.h, m.cy + dy * 60 * dt));
+        if (tapped.has('interact')) {
+          if (near(m, NEW, 6)) {
+            return {
+              dmg: 50, solved: true,
+              pages: [
+                '돋보기 아래— 핼리의 오른쪽 아래, 흐릿한 점 하나에 짧은 꼬리가 붙어 있다.',
+                '별이 아니다. 이건… 또 하나의 혜성이다.',
+                { who: ME, text: '천문부 원판 #12. 1986년 3월 21일 새벽 4시 25분, 아빠가 찍은 마지막 한 장.' },
+                { who: ME, text: '3월 22일보다 하루 먼저, 천문부 원판엔 이미 이 혜성이 찍혀 있었어요.' },
+                '"내가 처음 발견했다"는 주장이 크게 흔들렸다!',
+              ],
+            };
+          }
+          if (near(m, HALLEY, 8)) {
+            return {
+              dmg: 0, miss: true, keep: { ...m },
+              pages: ['…이건 핼리 혜성이다. 크고 진한 머리, 긴 꼬리.', '찾아야 하는 건 "또 하나"다.'],
+            };
+          }
+          m.msg = '…그냥 별이다. 더 흐리고, 꼬리가 달린 걸 찾자.';
+          Sound.sfx('move');
+        }
+        return null;
+      },
+
+      draw(g, m, ox, oy, t) {
+        rect(g, ox, oy, W, H, '#2a0a08');                                   // 암실: 빨간 안전등 아래
+        g.fillStyle = 'rgba(255,40,30,0.18)';
+        g.fillRect(ox, oy, W, H);
+        g.font = WORD_FONT;
+        g.textBaseline = 'middle';
+        if (m.phase === 'dev') {
+          const p = Math.min(1.15, m.t / DEV_TIME);
+          // 현상 쟁반 속 원판: 시간이 지날수록 상이 떠오른다
+          rect(g, ox + P.x - 8, oy + P.y - 6, P.w + 16, P.h + 12, '#e8e4da');
+          rect(g, ox + P.x - 6, oy + P.y - 4, P.w + 12, P.h + 8, '#c9a95a');
+          drawPlate(g, ox, oy, p, t);
+          // 막대: 좋은 구간 표시
+          const bx = ox + 20, by = oy + H - 14, bw = W - 40;
+          rect(g, bx, by, bw, 6, '#1a1a1e');
+          rect(g, Math.round(bx + bw * GOOD[0] / 1.15), by, Math.round(bw * (GOOD[1] - GOOD[0]) / 1.15), 6, '#3a7a4a');
+          rect(g, Math.round(bx + bw * Math.min(1, p / 1.15)), by - 2, 2, 10, '#ffe066');
+          g.fillStyle = '#e8eef8';
+          g.fillText('상이 떠오르면, 초록 구간에서 F로 꺼낸다', ox + 20, oy + H - 22);
+          return;
+        }
+        drawPlate(g, ox, oy, m.dev, t);
+        // 돋보기
+        const cx = Math.round(ox + P.x + m.cx), cy = Math.round(oy + P.y + m.cy);
+        ring(g, cx, cy, 7, '#ffe066');
+        rect(g, cx + 5, cy + 5, 3, 3, '#ffe066');
+        rect(g, ox + 6, oy + H - 18, W - 12, 14, '#0e1420');
+        g.fillStyle = '#e8eef8';
+        g.fillText(m.msg || '원판을 판독한다. 핼리 말고 "또 하나"를 찾아 F.', ox + 10, oy + H - 11);
+      },
+    };
+  })(),
+
   // 소리 분석: 1986년 관악부 녹음테이프의 파형을 훑어 네 순간을 찾고, 시간 간격을 따진다
   //   카운터 000 = 3시 55분, 1칸 = 5초. 화면에는 4시 15분(240)~4시 40분(540)만 보인다.
   sound: (() => {

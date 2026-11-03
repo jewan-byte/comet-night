@@ -84,6 +84,15 @@ function resetFlags() {
     day2Evening: false,  // 둘째 날 저녁, 집
     toldDad: false,      // 아빠에게 교장 선생님을 만났다고 말함
     day2Done: false,     // 둘째 날 끝
+    // 셋째 날 · 박영철
+    day3: false,         // 11월 4일 방과 후
+    ycIntro: false,      // 체육관에서 박영철 인터뷰 시작
+    ycSmoke: false,      // 박영철의 기억: 준비실 앞 연기
+    ycRescue: false,     // 박영철의 기억: 준비실 안 (가짜 램프, 가방)
+    ycDone: false,       // 박영철의 기억에서 돌아옴 (모순 3개)
+    plateStarted: false, // 임시 암실에서 현상 시작
+    plateDone: false,    // 원판 #12 현상·판독 성공
+    day3Done: false,     // 셋째 날 끝
   });
   smoke = null;
   stopFireBell();
@@ -202,6 +211,60 @@ const TESTIMONY = {
   story: true,
 };
 CLUES.push(TESTIMONY);
+
+// 셋째 날: 박영철이 말한 "영웅담"에서 발견한 모순
+const CONTRA_YC = {
+  patrol: {
+    name: '모순: 순찰',
+    text: [
+      '박영철: "3시 50분, 나는 숙직 순찰을 돌았다."',
+      '관악부: "순찰 한 번도 안 오시더라." 숙직실 이불은 차갑게 식어 있었다.',
+      '그리고 4시 28분 녹음 — "1층에 박 선생님 계시죠?" "…응, 암실에."',
+    ],
+  },
+  lamp: {
+    name: '모순: 넘어진 램프',
+    text: [
+      '박영철의 기억 속 작업대엔 넘어진 알코올램프가 있었다. 그 장면만 지지직거렸다.',
+      '그날 천문부의 램프는 옥상 의자 위에 있었다. 불은 콘센트에서 시작됐다.',
+    ],
+  },
+  date: {
+    name: '모순: 3월 22일의 발견',
+    text: [
+      '박영철: "3월 22일 밤, 내 원판에서 새 혜성을 처음 발견했다."',
+      '하지만 3월 21일 새벽, 도현은 암실 쟁반 속 천문부 사진에서 핼리 옆 또 하나의 꼬리를 봤다.',
+    ],
+  },
+};
+for (const c of Object.values(CONTRA_YC)) {
+  Object.assign(c, { place: '3장 · 박영철의 기억', found: false, story: true });
+  CLUES.push(c);
+}
+
+// 셋째 날: 천문부의 옛 사진기, 그리고 40년 만에 현상한 원판
+const CAMERA_CLUE = {
+  name: '천문부 원판 사진기',
+  text: [
+    '1986년 천문부의 나무 상자 사진기. 홀더 뒷면에 아직 원판 한 장이 들어 있다.',
+    '홀더 귀퉁이에 긁힌 글씨: "#12".',
+  ],
+  place: '1층',
+  found: false,
+  story: true,
+};
+const PLATE_CLUE = {
+  name: '원판 #12',
+  text: [
+    '1986년 3월 21일 새벽 4시 25분, 정우가 옥상에서 찍은 마지막 원판. 40년 만에 현상했다.',
+    '핼리 혜성의 오른쪽 아래에 흐릿한 머리와 짧은 꼬리 — 또 하나의 혜성.',
+    '모서리엔 천문부 원판 특유의 V자 흠. 박영철의 "3월 22일 발견"보다 하루 앞선다.',
+  ],
+  place: '1층 · 과학준비실 (임시 암실)',
+  found: false,
+  story: true,
+};
+CLUES.push(CAMERA_CLUE, PLATE_CLUE);
 
 // ── 과학실 실험 (experiment.js) — 주장마다 대사와 단서 반응 ──
 // 페이지 형식은 대사창과 같다. clues: 단서 이름 → { dmg: 깎는 신뢰도, text, unlock: 실험 기준이 생김 }
@@ -365,6 +428,74 @@ const EXPERIMENTS = {
       '증언 「준비실엔 나 혼자였다」를 반박했다!',
     ],
   },
+
+  // 셋째 날, 과학준비실(임시 암실) — 박영철의 "발견"
+  plate: {
+    title: '원판 현상',
+    mini: 'plate',
+    miniHelp: '현상: F 로 꺼내기  ·  판독: WASD 돋보기  ·  F 확인',
+    portrait: 'youngchul',
+    prop: 'paper',
+    speaker: '박영철 박사',
+    claim: '"그 혜성은 내가 3월 22일 처음 발견했다. 천문부 원판엔 아무것도 없었다."',
+    source: '— 박영철 박사, 신문부 인터뷰 (2026년 11월 4일)',
+    intro: [
+      '준비실 창문을 암막으로 가렸다. 40년 만에, 이 방이 다시 암실이 된다.',
+      '머릿속에서 박영철 박사의 목소리가 되풀이된다. 아무것도 없었다고. 내가 처음이었다고.',
+    ],
+    observe: [
+      ['주장을 다시 떠올린다.', '"3월 22일 밤, 내 원판에서." 그 전엔 아무도 몰랐다는 뜻이다.'],
+      ['원판은 빛에 닿으면 상이 남고, 현상액에 담그면 그 상이 떠오른다.', '40년 된 원판이라도 빛만 안 봤다면… 아직 늦지 않았다.'],
+      ['정우 선배의 일지. "4시 25분, 고도 15도. 원판 12번."', '그 원판이 아직 어딘가에 남아 있다면. ([단서 제시] → [실험])'],
+    ],
+    clues: {
+      '천문부 원판 사진기': {
+        dmg: 5, unlock: true,
+        text: [
+          '천문부의 옛 사진기를 꺼냈다. 홀더 뒷면, "#12".',
+          { who: ME, text: '40년 동안 아무도 현상하지 않은 원판이에요.' },
+          '이제 [실험]으로 현상할 수 있다!',
+        ],
+      },
+      '증언: 암실의 박영철': {
+        dmg: 20,
+        text: [
+          { who: ME, text: '3월 21일 새벽 암실 쟁반 속 천문부 사진에, 이미 핼리 옆 꼬리가 하나 더 있었어요.' },
+          { who: ME, text: '박사님은 그 원판들을 가방에 넣고 계셨고요.' },
+        ],
+      },
+      '모순: 3월 22일의 발견': {
+        dmg: 15,
+        text: [{ who: ME, text: '22일이 처음이라고 하셨죠. 그런데 21일 새벽에 그 꼬리를 본 사람이 있어요.' }],
+      },
+      '카세트테이프': {
+        dmg: 10,
+        text: [
+          { who: ME, text: '4시 28분 녹음. "1층에 박 선생님 계시죠?" "…응, 암실에."' },
+          { who: ME, text: '순찰을 도신 게 아니라, 암실에 계셨던 거예요.' },
+        ],
+      },
+      '모순: 순찰': { dmg: 10, text: [{ who: ME, text: '관악부는 순찰이 한 번도 안 왔다고 했고, 숙직실 이불은 차가웠어요.' }] },
+      '모순: 넘어진 램프': { dmg: 10, text: [{ who: ME, text: '그날 램프는 옥상에 있었어요. 작업대 위에 넘어져 있을 수가 없어요.' }] },
+      '1986년 학보': {
+        dmg: -5,
+        text: ['학보를 내밀었다.', '…"천문부 부주의". 박사님의 영웅담에 오히려 힘을 실어 줬다.'],
+      },
+    },
+    wrongClue: name => [`「${name}」을(를) 내밀었다.`, '…박사님은 웃기만 했다. 상관없는 얘기다.'],
+    noTarget: ['현상할 원판이 없다.', '천문부의 마지막 원판… 어디 있었지? ([단서 제시])'],
+    expDone: ['이미 현상한 원판이다.'],
+    notYet: ['아직이다. 박사님은 증거 없이는 꿈쩍도 하지 않을 것이다.'],
+    broken: ['"내가 처음 발견했다"는 주장이 무너졌다.', '지금이라면… [반박]할 수 있다!'],
+    taunts: ['학생들 장난이 지나치군.', '천문학은 증거로 말하는 거네.', '그날 원판은 다 불에 탔어.'],
+    tauntsWeak: ['…그 원판이, 남아 있었다고?', '그건… 우연이야. 그냥 얼룩이겠지.'],
+    win: [
+      { who: ME, text: '천문부 원판 #12. 3월 21일 새벽 4시 25분. 이 혜성은 이미 찍혀 있었어요.' },
+      { who: ME, text: '처음 발견한 건 박사님이 아니에요. 천문부였어요.' },
+      '머릿속의 박영철 박사가, 처음으로 말을 잃었다.',
+      '주장 「내가 처음 발견했다」를 반박했다!',
+    ],
+  },
 };
 
 resetFlags();
@@ -411,7 +542,7 @@ function beginMemory(who, look, where, at) {
   addMemoryActors();
 }
 const beginMinkyungMemory = (where, at) => beginMemory('minkyung', 'minkyung86', where, at);
-const MEMORY_LOOK = { minkyung: 'minkyung86', dohyun: 'dohyun86' };
+const MEMORY_LOOK = { minkyung: 'minkyung86', dohyun: 'dohyun86', youngchul: 'youngchul86' };
 
 // 기억 속에 처음부터 있는 사람들 (이도현의 기억: 음악실 관악부)
 function addMemoryActors() {
@@ -441,6 +572,17 @@ function setupDay2(at = DAY2_START) {
   companion.following = true;
   setFloor(1, at);
   if (!actors.some(a => a.who === 'principal')) addActor('principal', 57.5, 23.6, 'down', 1);
+}
+
+// 셋째 날 방과 후: 노을, 하율과 함께, 체육관 무대 앞엔 (인터뷰가 끝나기 전까지) 박영철 박사
+const DAY3_START = { x: 20.5, y: 37.5, dir: 'right' };
+function setupDay3(at = DAY3_START) {
+  ambient = DUSK;
+  actors.length = 0;
+  companion.visible = true;
+  companion.following = true;
+  setFloor(1, at);
+  if (!flags.ycDone) addActor('youngchul', 79.5, 43.5, 'down', 1);
 }
 
 const hasClue = name => CLUES.some(c => c.name === name && c.found);
@@ -503,8 +645,19 @@ function statusLines() {
     else if (flags.dhGotPlates) now = '원판 상자를 들고 옥상으로 돌아가기';
     return [{ text: '이도현의 기억 — 1986년 3월 21일 새벽' }, { text: now }];
   }
+  if (flags.memory === 'youngchul') {
+    let now = '"숙직 순찰"을 도는 중';
+    if (flags.ycRescue) now = '현관으로 빠져나가기';
+    else if (flags.ycSmoke) now = '준비실에 "뛰어들기"';
+    return [{ text: '박영철의 기억 — 그가 말하는 그날 밤' }, { text: now }];
+  }
   if (isPast(here)) return [{ text: '1986년 3월 21일 새벽 — 기억 속' }];
-  if (flags.day2Evening) doing = flags.day2Done ? '금요일 밤까지 사흘 (다음 이야기 준비 중)' : '저녁 — 집';
+  if (flags.day3) {
+    if (flags.day3Done) doing = '목요일로 (다음 이야기 준비 중)';
+    else if (flags.plateStarted || CAMERA_CLUE.found) doing = '과학준비실 임시 암실에서 원판 #12 현상하기';
+    else if (flags.ycDone) doing = flags.articleOk ? '체육관 무대 옆 전시함의 사진기 되찾기' : '과학탐구부실 구석 상자에서 옛 사진기 찾기';
+    else doing = '체육관에서 박영철 박사 인터뷰';
+  } else if (flags.day2Evening) doing = flags.day2Done ? '금요일 밤까지 사흘 (다음 이야기 준비 중)' : '저녁 — 집';
   else if (here === 'home') doing = flags.talkedDad ? '현관으로 나가는 중' : '등교 준비 중';
   else if (here === 'bus') doing = '학교 가는 중';
   else if (flags.day2Done) doing = '금요일 밤까지 사흘 (다음 이야기 준비 중)';
@@ -1160,13 +1313,20 @@ const SCRIPTS = {
     await walkActor(dohyun, 27.5, 18, 0.8);
     await walkActor(dohyun, 20, 21.5, 0.9);
     removeActor(dohyun);
+    // 원판 #12: 홀더 뒷면에 남은 마지막 한 장 (3장에서 40년 만에 현상된다)
+    await say(
+      { who: '정우', text: '…어? 홀더 뒷면에 한 장 남아 있었네. 도현이 올 때까지 이거라도.' },
+      '찰칵. 정우 선배가 사진기 셔터를 눌렀다.',
+      { who: '정우', text: '4시 25분, 고도 15도. 원판 12번.' },
+      '선배가 일지에 적었다.',
+    );
 
     await say(
       '난간 너머로 학교 건물을 내려다보았다.',
       '…1층 창문 하나가 시뻘겋게 빛나고 있다.',
       { who: '민경', text: '선배! 저기 1층 창문 빨개요. 불… 난 거 아니에요?' },
       { who: '정우', text: '아, 저건 암실 안전등이야. 사진 현상할 땐 빨간 불만 켜거든.' },
-      { who: '정우', text: '4시 25분, 고도 15도.' },
+      { who: '정우', text: '…4시 반이 다 돼 가는데. 도현이 늦네.' },
     );
     await wait(0.8);
 
@@ -1469,6 +1629,7 @@ const SCRIPTS = {
 
   // 1층 준비실 안 (이도현의 기억): "아무도 없었다" — 작업대 앞자리가 지지직거린다
   async pastPrepRoom() {
+    if (flags.memory === 'youngchul' && flags.ycSmoke && !flags.ycRescue) return SCRIPTS.ycRoom();
     if (flags.memory !== 'dohyun' || flags.dhGotPlates) return;
     flags.dhGotPlates = true;
     player.dir = 'up';
@@ -1509,6 +1670,7 @@ const SCRIPTS = {
   async pastPrepHall() {
     if (flags.memory === 'minkyung' && flags.mkFire && !flags.mkDistort) return SCRIPTS.mkDistort();
     if (flags.memory === 'dohyun' && flags.dhFire && !flags.dhFought) return SCRIPTS.dhFight();
+    if (flags.memory === 'youngchul' && !flags.ycSmoke) return SCRIPTS.ycSmoke();
   },
 
   async dhFight() {
@@ -1740,6 +1902,218 @@ const SCRIPTS = {
     }
     await say('창밖, 동쪽 하늘. 아직 보이지 않는 혜성이 그 어딘가로 다가오고 있다.');
     flags.day2Done = true;
+    await SCRIPTS.day3Start();
+  },
+
+  // ── 셋째 날 · 박영철 ──
+
+  // 11월 4일 방과 후: 앞마당에서 시작, 체육관엔 무대를 보러 온 박영철 박사
+  async day3Start() {
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    await showChapter('2026년 11월 4일 수요일\n방과 후', 2.2);
+    flags.day3 = true;
+    setupDay3();
+    await fadeInAsync();
+    await say(
+      { who: FRIEND, text: '빛찬아! 교장 선생님이 신문부 인터뷰를 잡아 주셨어.' },
+      { who: FRIEND, text: '박영철 박사, 지금 체육관에서 금요일 강연 무대를 보고 있대. 학교 홍보용 "명예 동문 인터뷰"래.' },
+    );
+    if (flags.articleOk) {
+      await say(
+        { who: FRIEND, text: '…근데 어제 특별판, 박사님도 보셨을지 몰라. "램프 부주의 아니었다" 그거.' },
+        { who: ME, text: '…조심해서 묻자.' },
+      );
+    } else {
+      await say({ who: ME, text: '…가 보자. 그 사람이 그날 밤을 어떻게 말하는지 듣고 싶어.' });
+    }
+  },
+
+  // 체육관: 셋째 날 처음 들어서면 박영철 장면
+  async gym() {
+    if (flags.day3 && !flags.ycIntro) return SCRIPTS.ycIntro();
+  },
+
+  async ycIntro() {
+    flags.ycIntro = true;
+    player.dir = 'up';
+    await say(
+      '무대 위에 현수막이 걸려 있다. "박영철 혜성 귀환 기념 특별 강연".',
+      '그 앞에서 은발의 남자가 직원과 조명 위치를 맞추고 있다.',
+      { who: '박영철', text: '아, 신문부 학생들인가? 교장 선생님께 얘기 들었네.' },
+    );
+    if (flags.articleOk) {
+      await say(
+        '박사의 눈이 하율의 기자 수첩에 머물렀다.',
+        { who: '박영철', text: '어제 학보 특별판… 자네들이 썼나? 40년 전 화재가 램프 탓이 아니었다던데.' },
+        { who: '박영철', text: '상상력이 풍부하군. 그 화재는 내가 직접 겪은 일이네.' },
+      );
+    } else {
+      await say({ who: '박영철', text: '모교 후배들 인터뷰라니, 영광이군. 뭐든 물어보게.' });
+    }
+    await say(
+      { who: FRIEND, text: '그럼… 1986년 3월 21일 새벽, 그날 이야기를 들려주세요.' },
+      { who: '박영철', text: '그날이라. 잊을 수가 없지. 나는 그날 숙직이었네.' },
+    );
+    await SCRIPTS.enterYoungchul();
+  },
+
+  // 박영철이 "말하는" 그날 밤 — 영웅담. 거짓인 곳마다 지지직거린다
+  async enterYoungchul() {
+    startGlitch(1.2);
+    await wait(0.4);
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      beginMemory('youngchul', 'youngchul86', 'old1', { x: 21.5, y: 27.5, dir: 'up' });
+      r();
+    }));
+    await showChapter('1986년 3월 21일 금요일\n새벽 3시 50분', 2.2);
+    await showChapter('— 박영철의 기억 —', 1.8);
+    await fadeInAsync();
+    await say(
+      { who: '박영철', text: '(숙직실. 나는 시계를 확인하고 일어났지. 3시 50분, 순찰 시간이었네.)' },
+    );
+    startGlitch(0.4);
+    await say(
+      '…펼쳐 둔 이불이 차갑다. 한참 전부터 아무도 눕지 않은 것처럼.',
+      { who: '박영철', text: '(복도로 나가 1층부터 차례로 돌았지. 성실하게.)' },
+    );
+  },
+
+  // 박영철의 기억: 1층 준비실 앞에서 연기를 "발견"
+  async ycSmoke() {
+    flags.ycSmoke = true;
+    smoke = 'old1';
+    player.dir = 'right';
+    await say(
+      { who: '박영철', text: '(그런데 준비실 쪽에서 연기가 나는 게 아닌가.)' },
+      { who: '박영철', text: '(나는 망설이지 않고 뛰어들었네.)' },
+    );
+  },
+
+  // 박영철의 기억: 준비실 안 — 넘어진 램프(가짜)와 "구해 낸" 원판
+  async ycRoom() {
+    flags.ycRescue = true;
+    player.dir = 'up';
+    await say({ who: '박영철', text: '(작업대 위엔 천문부 아이들이 켜 놓은 알코올램프가 넘어져 있었지.)' });
+    for (let i = 0; i < 3; i++) {
+      startGlitch(0.3);
+      await wait(0.45);
+    }
+    await say(
+      '…작업대 위가 지지직거린다. 거기엔 램프가 아니라 현상액 쟁반과, 빈 원판 봉투가 놓여 있다.',
+      { who: '박영철', text: '(불길 속에서 나는 아이들의 원판 상자를 끌어안고 빠져나왔네.)' },
+      { who: '박영철', text: '(그 원판이라도 구해야 했으니까. 그게 교사의 도리지.)' },
+      '…그런데 품에 안은 건 천문부 원판 상자가 아니라, 불룩한 자기 가방이다.',
+    );
+  },
+
+  // 박영철의 기억: 현관으로 나가면 끝 → 현재 체육관
+  async pastEntrance() {
+    if (flags.memory !== 'youngchul' || !flags.ycRescue || flags.ycDone) return;
+    flags.ycDone = true;
+    await say({ who: '박영철', text: '(밖으로 나오자 화재벨이 울리기 시작했지. 다행히 다친 사람은 없었네.)' });
+    await SCRIPTS.ycReturn();
+  },
+
+  async ycReturn() {
+    startGlitch(1);
+    await wait(0.3);
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      endMemory();
+      setupDay3({ x: 79.5, y: 47.5, dir: 'up' });
+      r();
+    }));
+    await fadeInAsync();
+    await say(
+      { who: '박영철', text: '그리고 다음 날, 3월 22일 밤. 내 원판에서 나는 그 혜성을 발견했네.' },
+      { who: '박영철', text: '천문부 아이들 원판엔 아무것도 없었고. 안타까운 일이지.' },
+      { who: '박영철', text: '금요일 강연에서 그 "첫 사진"을 공개할 걸세. 40년 전, 내가 찍은.' },
+    );
+    if (flags.articleOk) {
+      await say(
+        { who: '박영철', text: '아, 그리고 천문부 옛 사진기는 기념 전시용으로 빌렸네. 교장 선생님 허락도 받았고.' },
+        '박사가 무대 옆 전시함을 턱짓했다. 사진기는 비어 있다고 확신하는 얼굴이다.',
+      );
+    }
+    const yc = actors.find(a => a.who === 'youngchul');
+    if (yc) {
+      await walkActor(yc, 70, 47.5, 1.2);
+      await walkActor(yc, 66, 57.5, 0.9);
+      removeActor(yc);
+    }
+    for (const c of Object.values(CONTRA_YC)) {
+      c.found = true;
+      addEvidence(1);
+    }
+    Toast.show('수첩에 모순 3개를 적었다  (Tab)');
+    await say(
+      { who: ME, text: '(순찰은 없었어. "응, 암실에." 녹음이 남아 있어.)' },
+      { who: ME, text: '(그리고 민경 선생님 기억 속에서… 아빠가 마지막 한 장을 찍었어. "원판 12번.")' },
+      { who: FRIEND, text: '빛찬아. 그 원판, 혹시 아직 사진기 안에 있는 거 아냐?' },
+      flags.articleOk
+        ? { who: ME, text: '…무대 옆 전시함. 박사님이 빌려 간 그 사진기야.' }
+        : { who: ME, text: '…우리 동아리방. 망원경 옆 구석 상자에 옛날 삼각대랑 나무 상자가 있었어.' },
+    );
+  },
+
+  // 체육관 무대 옆 전시함 (특별판이 나간 경우 사진기가 여기 있다)
+  async gymExhibit() {
+    if (flags.articleOk && flags.ycDone && !CAMERA_CLUE.found) {
+      await say(
+        '전시함. "박영철 박사 소장품 전시 — 1986년 천문부 사진기"',
+        '…그런데 받침대의 대여표엔 이렇게 적혀 있다. "학교 비품 — 과학탐구부. 11/7 반납"',
+        { who: FRIEND, text: '박사님 거 아니잖아. 우리 동아리 거야.' },
+      );
+      return SCRIPTS.gotCamera();
+    }
+    await say('강연용 전시함. 박영철 박사의 논문과 상패가 놓여 있다.');
+  },
+
+  // 과학탐구부실 구석 상자 (특별판이 안 나간 경우 사진기가 여기 있다)
+  async clubBox() {
+    if (!flags.articleOk && flags.ycDone && !CAMERA_CLUE.found) {
+      await say(
+        '구석 상자를 열었다. 먼지 앉은 천막, 삼각대 다리… 그리고 나무 상자 하나.',
+        '천문부의 옛 원판 사진기다.',
+      );
+      return SCRIPTS.gotCamera();
+    }
+    await say('오래된 상자. 낡은 천막과 삼각대 다리가 삐죽 나와 있다.');
+  },
+
+  async gotCamera() {
+    CAMERA_CLUE.found = true;
+    Toast.show(`새 단서: ${CAMERA_CLUE.name}  (Tab)`);
+    await say(
+      '홀더를 조심스럽게 빼 보았다. 뒷면 슬롯에… 아직 원판이 들어 있다. 귀퉁이에 긁힌 "#12".',
+      { who: FRIEND, text: '40년 동안… 아무도 안 열어 본 거야?' },
+      { who: ME, text: '현상하려면 암실이 필요해. 준비실. 공사 전에, 마지막으로 한 번 더 암실이 되는 거야.' },
+    );
+  },
+
+  // 2026년 과학준비실: 사진기를 들고 오면 임시 암실에서 원판 현상 (세 번째 검증)
+  async prepRoom() {
+    if (!CAMERA_CLUE.found || flags.plateDone || flags.memory) return;
+    flags.plateStarted = true;
+    await say(
+      '창문을 검은 비닐로 막고, 빨간 셀로판을 씌운 손전등을 켰다.',
+      { who: FRIEND, text: '…이거 완전 1986년 같다.' },
+    );
+    const run = storyRun;
+    await Experiment.start(EXPERIMENTS.plate);
+    alive(run);
+    flags.plateDone = true;
+    PLATE_CLUE.found = true;
+    addEvidence(1);
+    Toast.show(`새 단서: ${PLATE_CLUE.name}  (Tab)`);
+    await say(
+      { who: FRIEND, text: '……빛찬아. 이거, 금요일에 박사님이 띄울 "첫 사진"이랑 같은 혜성이지?' },
+      { who: ME, text: '응. 하루 먼저 찍힌.' },
+      { who: FRIEND, text: '근데 박사님은 "그건 그냥 얼룩"이라고 우기겠지. 날짜를 어떻게 증명해?' },
+      { who: ME, text: '…아빠 일지. 뜯겨 나간 마지막 장들. 거기에 혜성 위치가 적혀 있었을 거야.' },
+    );
+    flags.day3Done = true;
   },
 
   // 과학실 연소 실험 — 민경 회상 직후 첫 검증 (mkReturn), 개발자 메뉴에서도 바로 할 수 있다
@@ -1759,6 +2133,15 @@ const SCRIPTS = {
     // 1장 마무리 단계에선 그게 최우선
     if (flags.ch1Ready && !flags.foundLog) {
       await say({ who: FRIEND, text: '준비실 서류함, 맨 아래 "천문부" 칸! 얼른 열어 보자.' });
+      return;
+    }
+    if (flags.day3) {
+      if (flags.day3Done) await say({ who: FRIEND, text: '날짜를 증명할 마지막 조각… 너네 아빠 일지의 뜯긴 장이야.' });
+      else if (CAMERA_CLUE.found) await say({ who: FRIEND, text: '준비실을 암실로 만들자. 1층 과학실 옆이야.' });
+      else if (flags.ycDone) await say(flags.articleOk
+        ? { who: FRIEND, text: '체육관 무대 옆 전시함! 박사님이 우리 사진기를 빌려 갔어.' }
+        : { who: FRIEND, text: '과학탐구부실 구석 상자. 망원경 옆에 있던 그거!' });
+      else await say({ who: FRIEND, text: '체육관은 운동장 오른쪽 끝이야. 박사님 아직 계실 때 가자.' });
       return;
     }
     if (flags.dhDone) {
@@ -1953,6 +2336,8 @@ const DEV_STAGES = [
   ['2장 둘째 날 — 교무실로 (이도현)', 'dh'],
   ['2장 — 이도현의 기억 들어가기', 'dhmem'],
   ['2장 — 소리 분석 (교무실, 테이프 있음)', 'dhsound'],
+  ['3장 셋째 날 — 체육관 박영철', 'd3'],
+  ['3장 — 원판 현상 (사진기 있음, 준비실 앞)', 'd3plate'],
 ];
 
 const findClue = name => { const c = CLUES.find(k => k.name === name); if (c) c.found = true; };
@@ -2011,6 +2396,26 @@ function devStage(stage) {
       if (stage === 'dhmem') {
         flags.dhIntro = true;
         runScript('enterDohyun');
+      }
+      return;
+    }
+    if (stage === 'd3' || stage === 'd3plate') {
+      // 둘째 날까지 모두 끝낸 상태
+      Object.assign(flags, {
+        ch2Started: true, ch2Intro: true, mkSawNote: true, mkMusic: true, mkRoof: true, mkAsk: 'comet',
+        mkFire: true, mkDistort: true, mkDone: true, day2: true, dhIntro: true, dhBandDown: true, dhBandUp: true,
+        dhGotPlates: true, dhFire: true, dhFought: true, dhDone: true, dhSound: true, day2Evening: true, day2Done: true, day3: true,
+      });
+      for (const c of [...Object.values(CONTRA), ...Object.values(CONTRA_DH)]) c.found = true;
+      BURN_CLUE.found = TESTIMONY.found = true;
+      findClue('카세트테이프');
+      if (stage === 'd3') {
+        setupDay3();
+      } else {
+        Object.assign(flags, { ycIntro: true, ycSmoke: true, ycRescue: true, ycDone: true });
+        for (const c of Object.values(CONTRA_YC)) c.found = true;
+        CAMERA_CLUE.found = true;
+        setupDay3({ x: 55.5, y: 18.5, dir: 'up' });
       }
       return;
     }

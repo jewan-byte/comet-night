@@ -164,6 +164,8 @@ function build1F() {
   b.obj('boxes', 60, 12);
   b.obj('boxes', 61, 12);
   b.obj('boxes', 61, 11);
+  // 셋째 날: 사진기를 들고 오면 임시 암실에서 원판 현상 (story.js 의 prepRoom)
+  b.warps.push({ x: 52, y: 4, w: 10, h: 10, script: 'prepRoom' });
 
   // 중앙 현관
   b.room('중앙 현관', 2, 22, 12, 10, 'hall');
@@ -189,7 +191,7 @@ function build1F() {
   b.obj('telescope', 41, 22, 1, 1, clue('천문부 망원경', '오래된 굴절망원경이다.', '받침대에 "1986 천문부"라고 긁힌 자국이 있다.'));
   b.obj('bookshelf', 49, 22, 3, 1);
   b.obj('table', 44, 25, 4, 2, clue('과학탐구부 활동 일지', '과학탐구부 활동 일지.', '마지막 기록은 3주 전. 부원 수: 1명.'));
-  b.obj('boxes', 40, 30);
+  b.obj('boxes', 40, 30, 1, 1, { script: 'clubBox', prompt: '조사하기' });   // 천문부 옛 장비 (셋째 날)
   b.obj('boxes', 41, 30);
   b.obj('plant', 51, 30);
 
@@ -256,6 +258,11 @@ function build1F() {
     '천 한쪽 끝이 검게 그을려 있다.'));
   b.obj('bench', 67, 42, 2, 1);
   b.obj('bench', 67, 47, 2, 1);
+  // 금요일 강연 준비: 현수막, 무대, 무대 옆 전시함 (story.js 의 gym / gymExhibit)
+  b.dec('banner', 77, 36, 6, 2, look('현수막. "박영철 혜성 귀환 기념 특별 강연 — 11월 6일(금) 오후 7시"'));
+  b.obj('stage', 76, 40, 8, 2);
+  b.obj('trophycase', 86, 41, 3, 1, { script: 'gymExhibit', prompt: '조사하기' });
+  b.warps.push({ x: 67, y: 38, w: 26, h: 23, script: 'gym' });
 
   return finishFloor(b);
 }

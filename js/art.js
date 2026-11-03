@@ -402,6 +402,17 @@ const DECO_ART = {
     }
   },
 
+  // 체육관 강연 현수막 (2칸 높이 벽)
+  banner(g, x, y, w) {
+    rect(g, x + 2, y + 4, w - 4, 20, '#f4f4f0');
+    rect(g, x + 2, y + 4, w - 4, 3, '#2a3a7a');
+    rect(g, x + 2, y + 21, w - 4, 3, '#2a3a7a');
+    rect(g, x + 8, y + 10, 4, 4, '#ffd84a');                       // 혜성
+    for (let i = 0; i < 7; i++) rect(g, x + 12 + i, y + 11 + (i >> 1), 1, 1, '#8fb0ff');
+    for (let i = 0; i < 4; i++) rect(g, x + 24 + i * 15, y + 11 + (i % 2), 11, 2, '#2a3a7a');   // 글자 줄
+    rect(g, x + 24, y + 16, w - 34, 1, '#7a8aaa');
+  },
+
   // 오래된 그을음 자국
   scorch(g, x, y, w, h) {
     for (let yy = 0; yy < h; yy++) {
@@ -1100,6 +1111,14 @@ const PEOPLE = {
     pal: {
       ...PLAYER_PAL, hair: '#2a2016', hairHi: '#44362a', blazer: '#6a4a30', blazerDk: '#523822',
       shirt: '#e8e2d4', tie: '#2a3a5a', pants: '#3a3430', pantsDk: '#2e2824',
+    },
+    glasses: true,
+  },
+  // 지금의 박영철 박사: 은발, 낙타색 코트, 안경
+  youngchul: {
+    pal: {
+      ...PLAYER_PAL, hair: '#c8c8cc', hairHi: '#e4e4e8', blazer: '#a07a50', blazerDk: '#86643e',
+      shirt: '#f0ece2', tie: '#2a3a5a', pants: '#3a3a44', pantsDk: '#2e2e36',
     },
     glasses: true,
   },

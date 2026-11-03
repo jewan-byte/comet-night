@@ -135,6 +135,9 @@ function buildPast1F() {
   b.obj('shoelocker', 12, 23, 2, 1);
   b.dec('mat', 6, 30, 4, 2);
 
+  // 박영철의 기억: 원판 상자를 안고 현관으로 나가면 끝 (story.js 의 pastEntrance)
+  b.warps.push({ x: 2, y: 22, w: 12, h: 10, script: 'pastEntrance' });
+
   // 숙직실 (2026년의 기록 보관실 자리)
   b.room('숙직실', 16, 22, 12, 9, 'wood');
   b.carve(26, 20, 2, 2, 'door');
