@@ -1087,6 +1087,14 @@ const PEOPLE = {
   dohyun86: {
     pal: { ...PLAYER_PAL, hair: '#15151a', hairHi: '#2e2e38', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
   },
+  // 지금의 이도현 교장: 희끗한 머리, 짙은 양복, 안경
+  principal: {
+    pal: {
+      ...PLAYER_PAL, hair: '#8a8a90', hairHi: '#a8a8b0', blazer: '#2a2e3a', blazerDk: '#1e212b',
+      shirt: '#f0f0f0', tie: '#5a2a30', pants: '#2a2e3a', pantsDk: '#1e212b',
+    },
+    glasses: true,
+  },
   // 1986년 관악부 선배
   band86: {
     pal: { ...PLAYER_PAL, hair: '#2a1e18', hairHi: '#44342a', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },

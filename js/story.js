@@ -69,6 +69,16 @@ function resetFlags() {
     mkDistort: false,    // 1층에서 어긋난 기억 장면
     mkDone: false,       // 기억에서 돌아와 선택까지 끝남
     articleOk: false,    // 하율에게 기사를 써도 된다고 함
+    // 둘째 날 · 이도현의 기억
+    day2: false,         // 11월 3일 점심시간 (노을 없음)
+    dhIntro: false,      // 교무실에서 교장 장면 시작
+    showedBand: false,   // 그을린 완장을 보여 줌
+    dhBandDown: false,   // 기억 속: 내려가며 관악부 인사 (4:24, 녹음됨)
+    dhBandUp: false,     // 기억 속: 올라오며 "박 선생님 계시죠?" (4:28, 녹음됨)
+    dhGotPlates: false,  // 기억 속: 새 원판 상자를 들고 준비실을 나옴
+    dhFire: false,       // 기억 속: 3층 계단에서 '펑'
+    dhFought: false,     // 기억 속: 불을 끄려다 정우를 만남
+    dhDone: false,       // 기억에서 돌아와 선택까지 끝남 → 녹음 검증으로
   });
   smoke = null;
   stopFireBell();
@@ -146,6 +156,30 @@ const CONTRA = {
 };
 for (const c of Object.values(CONTRA)) {
   Object.assign(c, { place: '2장 · 오민경의 기억', found: false, story: true });
+  CLUES.push(c);
+}
+
+// 이도현이 "말한 대로"의 기억에서 발견한 모순
+const CONTRA_DH = {
+  clink: {
+    name: '모순: 쨍그랑',
+    text: [
+      '교장 선생님은 어둠 속에서 선반을 스치다 유리가 쨍그랑한 게 알코올램프였다고 믿는다.',
+      '하지만 그날 천문부의 알코올램프는 옥상 의자 위에서 타고 있었다. (오민경의 기억)',
+      '준비실 선반에서 부딪힌 건 램프가 아니다.',
+    ],
+  },
+  empty: {
+    name: '모순: 비어 있던 암실',
+    text: [
+      '교장 선생님의 기억 속 준비실은 비어 있었다.',
+      '그런데 빨간 안전등이 켜져 있었고, 현상액 쟁반엔 사진이 떠 있었다. 누군가 작업하던 중이었다.',
+      '기억 속 작업대 앞자리만… 지지직거리며 비어 있었다.',
+    ],
+  },
+};
+for (const c of Object.values(CONTRA_DH)) {
+  Object.assign(c, { place: '2장 · 이도현의 기억', found: false, story: true });
   CLUES.push(c);
 }
 
@@ -266,25 +300,49 @@ function setupAfterSchool() {
   if (!actors.length) addActor('teacher', 39.5, 9, 'down', 1);   // 실험대 사이, 문에서 보이는 자리
 }
 
-// 오민경의 기억으로: 하율·노을·현재 인물은 사라지고, 빛찬은 1학년 오민경이 된다
-function beginMinkyungMemory(where, at) {
+// 누군가의 기억으로: 하율·노을·현재 인물은 사라지고, 빛찬은 그 사람이 된다
+// who: 'minkyung' | 'dohyun' …, look: PEOPLE 이름
+function beginMemory(who, look, where, at) {
   ambient = null;
   actors.length = 0;
   companion.following = false;
   companion.visible = false;
-  flags.memory = 'minkyung';
-  setPlayerLook('minkyung86');
+  flags.memory = who;
+  setPlayerLook(look);
   setFloor(where, at);
+  addMemoryActors();
+}
+const beginMinkyungMemory = (where, at) => beginMemory('minkyung', 'minkyung86', where, at);
+const MEMORY_LOOK = { minkyung: 'minkyung86', dohyun: 'dohyun86' };
+
+// 기억 속에 처음부터 있는 사람들 (이도현의 기억: 음악실 관악부)
+function addMemoryActors() {
+  if (flags.memory === 'dohyun') {
+    addActor('band86', 12.5, 26, 'down', 'old2');
+    addActor('band86', 16.5, 26, 'down', 'old2');
+    addActor('band86', 22.5, 25, 'left', 'old2');
+  }
 }
 
-// 기억에서 현재로: 빛찬으로 돌아오고 방과 후 노을
+// 기억에서 현재로: 빛찬으로 돌아오고, 첫째 날이면 방과 후 노을
 function endMemory() {
   stopFireBell();
   smoke = null;
   actors.length = 0;
   flags.memory = null;
   setPlayerLook(null);
-  ambient = DUSK;
+  ambient = flags.day2 ? null : DUSK;
+}
+
+// 둘째 날 점심: 하율과 함께 1층 복도(또는 at), 교무실엔 교장 선생님
+const DAY2_START = { x: 57.5, y: 18.5, dir: 'up' };
+const DOHYUN_START = { x: 32.5, y: 26.5, dir: 'down' };   // 1986년 3층, 옥상 계단 아래
+function setupDay2(at = DAY2_START) {
+  ambient = null;
+  companion.visible = true;
+  companion.following = true;
+  setFloor(1, at);
+  if (!actors.some(a => a.floor === 1)) addActor('principal', 57.5, 23.6, 'down', 1);
 }
 
 const hasClue = name => CLUES.some(c => c.name === name && c.found);
@@ -341,10 +399,18 @@ function statusLines() {
     else if (flags.mkSawNote) now = '4시까지 숨어 있을 곳을 찾는 중 (아래층에서 음악 소리)';
     return [{ text: '오민경의 기억 — 1986년 3월 21일 새벽' }, { text: now }];
   }
+  if (flags.memory === 'dohyun') {
+    let now = '1층 준비실에서 새 원판 상자 가져오기';
+    if (flags.dhFire) now = '아래층에서 터지는 소리 — 1층으로!';
+    else if (flags.dhGotPlates) now = '원판 상자를 들고 옥상으로 돌아가기';
+    return [{ text: '이도현의 기억 — 1986년 3월 21일 새벽' }, { text: now }];
+  }
   if (isPast(here)) return [{ text: '1986년 3월 21일 새벽 — 기억 속' }];
   if (here === 'home') doing = flags.talkedDad ? '현관으로 나가는 중' : '등교 준비 중';
   else if (here === 'bus') doing = '학교 가는 중';
-  else if (flags.mkDone) doing = '이도현 교장 선생님을 찾아가야 한다 (다음 이야기 준비 중)';
+  else if (flags.dhDone) doing = '음악실 카세트테이프로 그날 밤 소리 확인하기 (다음 이야기 준비 중)';
+  else if (flags.day2) doing = '점심시간 — 교무실에서 이도현 교장 선생님 만나기';
+  else if (flags.mkDone) doing = '이도현 교장 선생님을 찾아가야 한다';
   else if (flags.ch2Started && !flags.ch2Intro) doing = '방과 후 — 과학실로 가는 중';
   else if (flags.ch1Done) doing = '방과 후 과학실 약속을 기다리는 중';
   else if (flags.ch1Ready && !flags.foundLog) doing = '준비실 "천문부" 칸을 확인하러 가는 중';
@@ -1145,6 +1211,242 @@ const SCRIPTS = {
     companion.following = true;
     placeCompanionBehind();
     await say({ who: FRIEND, text: '이도현 교장 선생님… 내일 찾아가 보자.' });
+    await SCRIPTS.day2Start();
+  },
+
+  // ── 둘째 날 · 이도현의 기억 ──
+
+  // 11월 3일 점심시간: 1층 복도에서 시작, 교무실엔 교장 선생님
+  async day2Start() {
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    await showChapter('2026년 11월 3일 화요일\n점심시간', 2.2);
+    flags.day2 = true;
+    setupDay2();
+    await fadeInAsync();
+    await say(
+      { who: FRIEND, text: '교장 선생님, 점심시간엔 교무실에 계신대.' },
+      { who: FRIEND, text: '"넌 여기 없었던 거야" — 그 말 들은 사람이 교장 선생님이라면…' },
+      { who: ME, text: '…가 보자.' },
+    );
+  },
+
+  // 교무실: 어떻게 말을 꺼낼지 (태도 = 도현의 마음) → 연소 실험 결과 → 도현의 기억으로
+  async dhIntro() {
+    if (!flags.day2) return;
+    flags.dhIntro = true;
+    player.dir = 'up';
+    await say(
+      '교무실. 이도현 교장 선생님이 창가 쪽에서 서류를 넘기고 있다.',
+      { who: '교장 선생님', text: '과학탐구부? 무슨 일이지?' },
+    );
+    if (hasClue('천문부 완장')) {
+      flags.showedBand = true;
+      addEvidence(1);
+      await say(
+        '빛찬은 체육관 분실물 상자에서 찾은 완장을 꺼냈다.',
+        '빛바랜 "천문부" 자수. 안쪽엔 "3학년 이도현". 한쪽 끝이 검게 그을려 있다.',
+        '교장 선생님의 손이 멈췄다.',
+        { who: '교장 선생님', text: '……이걸, 어디서.' },
+      );
+    } else {
+      await say(
+        { who: ME, text: '1986년 3월 21일, 과학준비실 화재에 대해 여쭤보려고요.' },
+        { who: ME, text: '…제 아빠 이름은 한정우예요.' },
+        '서류를 넘기던 손이 멈췄다.',
+        { who: '교장 선생님', text: '……정우의.' },
+      );
+    }
+    // 선택: 어떤 태도로 (도현의 마음)
+    const kind = await choose(
+      ['교장 선생님이 천천히 고개를 들었다.'],
+      flags.showedBand
+        ? ['"이걸로 불을 끄려 하셨던 거죠?"', '"왜 아빠한테 떠넘기셨어요?"']
+        : ['"아빠는 아무 말도 안 해요. 그래서 알고 싶어요."', '"아빠가 누명 쓴 거, 알고 계셨죠?"'],
+    ) === 0;
+    if (kind) {
+      addHeart('dohyun', 2);
+      await say(
+        { who: '교장 선생님', text: '……' },
+        { who: '교장 선생님', text: '40년 동안, 아무도 그렇게 묻지 않았다.' },
+      );
+    } else {
+      addHeart('dohyun', -1);
+      await say(
+        { who: '교장 선생님', text: '…너는 아무것도 모른다.' },
+        { who: '교장 선생님', text: '하지만— 정우의 아들이라면, 들을 자격은 있겠지.' },
+      );
+    }
+    await say(
+      { who: ME, text: '어제 과학실에서 그날 불을 재현해 봤어요.' },
+      { who: ME, text: '불은 램프가 아니라 바닥, 콘센트 쪽에서 시작됐어요.' },
+      { who: '교장 선생님', text: '…램프가 아니었다고?' },
+      '교장 선생님은 한참 동안 창밖만 바라보았다.',
+      { who: '교장 선생님', text: '…그래도. 그래도 그날 밤, 내가 뭔가를 건드렸어. 분명히.' },
+      { who: '교장 선생님', text: '들려주지. 내가 기억하는 그날 밤을.' },
+    );
+    await SCRIPTS.enterDohyun();
+  },
+
+  // 지지직 — 1986년 3층 옥상 계단 아래, 3학년 이도현이 된다
+  async enterDohyun() {
+    startGlitch(1.4);
+    await wait(0.5);
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      beginMemory('dohyun', 'dohyun86', 'old3', DOHYUN_START);
+      r();
+    }));
+    await showChapter('1986년 3월 21일 금요일\n새벽 4시 20분', 2.4);
+    await showChapter('— 이도현의 기억 —', 1.8);
+    await fadeInAsync();
+    await say(
+      '정우가 새 원판 상자를 가져오라고 했다. 1층 준비실, 천문부 선반.',
+      '…장학금 심사를 앞두고 밤에 학교에 몰래 남은 거, 들키면 끝이었지.',
+      '"품행 우수." 그게 내 장학금 조건이었으니까.',
+      '빨리 갔다 오자.',
+    );
+  },
+
+  // 2층 음악실 앞 복도 (이도현의 기억): 내려갈 때 / 올라올 때 관악부가 말을 건다 — 녹음기가 돌고 있다
+  async pastHall2() {
+    if (flags.memory !== 'dohyun') return;
+    if (!flags.dhGotPlates && !flags.dhBandDown) {
+      flags.dhBandDown = true;
+      await say(
+        '음악실 문틈으로 트럼펫 소리가 새어 나온다.',
+        { who: '관악부', text: '어, 도현 선배! 이 시간에 어디 가요?' },
+        { who: '도현', text: '쉿. 금방 올라가.' },
+      );
+    } else if (flags.dhGotPlates && !flags.dhBandUp) {
+      flags.dhBandUp = true;
+      await say(
+        { who: '관악부', text: '선배, 1층에 박 선생님 계시죠? 순찰 한 번도 안 오시던데.' },
+        '…나는 대답하지 않고 계단을 올랐어.',
+      );
+    }
+  },
+
+  // 1층 준비실 안 (이도현의 기억): "아무도 없었다" — 작업대 앞자리가 지지직거린다
+  async pastPrepRoom() {
+    if (flags.memory !== 'dohyun' || flags.dhGotPlates) return;
+    flags.dhGotPlates = true;
+    player.dir = 'up';
+    await say('빨간 안전등. 시큼한 약품 냄새.', '준비실엔…');
+    // 숨긴 기억: 작업대 앞의 누군가가 잠깐씩 비쳤다 사라진다
+    const ghost = addActor('shadow', 56.5, 7.9, 'down', 'old1');
+    for (let i = 0; i < 3; i++) {
+      startGlitch(0.25);
+      ghost.floor = 'old1';
+      await wait(0.25);
+      ghost.floor = null;
+      await wait(0.35);
+    }
+    removeActor(ghost);
+    await say(
+      '…아무도 없었어. 정말로.',
+      '천문부 선반을 더듬었다. 어두워서 잘 보이지 않았다.',
+      '쨍그랑—',
+      '손등에 차가운 유리가 부딪혔다. …알코올램프였을까.',
+      '새 원판 상자를 찾아 들고, 서둘러 준비실을 나왔다.',
+    );
+  },
+
+  // 3층 계단 (이도현의 기억): 원판을 들고 올라오면 아래층에서 '펑'
+  async pastStairs3() {
+    if (flags.memory !== 'dohyun' || !flags.dhGotPlates || flags.dhFire) return;
+    flags.dhFire = true;
+    Sound.sfx('hit');
+    smoke = 'old1';
+    await say(
+      '펑—!',
+      '…아래층에서 뭔가 터지는 소리.',
+      '원판 상자를 계단에 내려놓고, 다시 뛰어 내려갔다.',
+    );
+  },
+
+  // 1층 준비실 앞 복도: 민경의 기억이면 어긋난 기억 장면, 도현의 기억이면 불과 정우
+  async pastPrepHall() {
+    if (flags.memory === 'minkyung' && flags.mkFire && !flags.mkDistort) return SCRIPTS.mkDistort();
+    if (flags.memory === 'dohyun' && flags.dhFire && !flags.dhFought) return SCRIPTS.dhFight();
+  },
+
+  async dhFight() {
+    flags.dhFought = true;
+    player.dir = 'right';
+    await say(
+      '준비실 문틈으로 연기가 새어 나온다.',
+      '안을 들여다보니— 콘센트 쪽 바닥에서 불길이 솟고 있었다.',
+      '완장을 풀어 불을 두드렸다. 한 번, 두 번, 세 번.',
+      '천이 타들어 가는 냄새.',
+    );
+    startFireBell();
+    await say('따르르르르릉—!!', '…화재벨.');
+    const jeongwoo = addActor('jeongwoo86', 44.5, 18.4, 'right', 'old1');
+    await walkActor(jeongwoo, 52.5, 18.4, 0.8);
+    player.dir = 'left';
+    await say(
+      { who: '정우', text: '도현아!' },
+      { who: '도현', text: '정우야, 내가… 램프를… 선반에서…' },
+      { who: '정우', text: '(낮게) …넌 여기 없었던 거야. 가!' },
+      { who: '도현', text: '그래도—' },
+      { who: '정우', text: '장학금, 날릴 거야? 가라니까!' },
+      '…나는 도망쳤어.',
+    );
+    await SCRIPTS.dhReturn();
+  },
+
+  // 현재로: 도현의 고백 → 모순 → 추궁/공감 → 하율이 카세트테이프를 떠올린다
+  async dhReturn() {
+    stopFireBell();
+    startGlitch(1.2);
+    await wait(0.4);
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      endMemory();
+      setupDay2({ x: 57.5, y: 25.9, dir: 'up' });
+      r();
+    }));
+    await fadeInAsync();
+    await say(
+      { who: '교장 선생님', text: '그게 다다. 내가 램프를 건드렸고, 정우가 내 대신 모든 걸 짊어졌어.' },
+      { who: '교장 선생님', text: '나는 장학금을 지켰고… 정우는 학교를 떠났다.' },
+      '하지만 이상하다. 교장 선생님의 이야기에도 맞지 않는 조각이 있다.',
+    );
+    for (const c of Object.values(CONTRA_DH)) {
+      c.found = true;
+      addEvidence(1);
+    }
+    Toast.show('수첩에 모순 2개를 적었다  (Tab)');
+    await say(
+      { who: ME, text: '(그날 램프는 옥상 의자 위에 있었어. 선반에서 부딪힌 건 램프가 아니야.)' },
+      { who: ME, text: '(그리고 안전등이 켜진 암실이 비어 있었다고? 기억 속 그 빈자리는…)' },
+    );
+    // 선택: 교장 선생님에게 (도현의 마음)
+    const kind = await choose(
+      ['교장 선생님에게 뭐라고 할까?'],
+      ['"40년 동안 혼자 짊어지셨네요."', '"아빠 인생을 망친 건 아세요?"'],
+    ) === 0;
+    if (kind) {
+      addHeart('dohyun', 2);
+      await say(
+        { who: '교장 선생님', text: '…혼자가 아니었지. 정우가 더 무거운 걸 졌으니까.' },
+        { who: '교장 선생님', text: '고맙다. 정우를… 많이 닮았구나.' },
+      );
+    } else {
+      addHeart('dohyun', -1);
+      await say(
+        { who: '교장 선생님', text: '……알고 있다. 하루도 잊은 적 없어.' },
+        '교장 선생님은 안경을 벗고 눈가를 눌렀다.',
+      );
+    }
+    await say(
+      { who: FRIEND, text: '선생님… 그날 밤, 정말 준비실엔 아무도 없었어요?' },
+      { who: '교장 선생님', text: '…없었다.' },
+      '대답이 반 박자 늦었다.',
+      { who: FRIEND, text: '(속삭임) 빛찬아, 음악실 카세트! 그날 밤 관악부가 녹음하고 있었잖아.' },
+      { who: ME, text: '(…그날 밤 소리가 남아 있다면, 누가 언제 어디 있었는지 알 수 있어.)' },
+    );
+    flags.dhDone = true;
   },
 
   // 과학실 연소 실험 — 민경 회상 직후 첫 검증 (mkReturn), 개발자 메뉴에서도 바로 할 수 있다
@@ -1164,6 +1466,17 @@ const SCRIPTS = {
     // 1장 마무리 단계에선 그게 최우선
     if (flags.ch1Ready && !flags.foundLog) {
       await say({ who: FRIEND, text: '준비실 서류함, 맨 아래 "천문부" 칸! 얼른 열어 보자.' });
+      return;
+    }
+    if (flags.dhDone) {
+      await say(
+        { who: FRIEND, text: '교장 선생님, "없었다"고 할 때 대답이 늦었어. 뭔가 숨기고 있어.' },
+        { who: FRIEND, text: '2층 음악실 카세트테이프. 그날 밤 소리가 다 들어 있을 거야.' },
+      );
+      return;
+    }
+    if (flags.day2 && !flags.dhIntro) {
+      await say({ who: FRIEND, text: '교무실은 1층 오른쪽 끝이야. 교장 선생님, 점심엔 거기 계신대.' });
       return;
     }
     if (flags.mkDone) {
@@ -1344,6 +1657,8 @@ const DEV_STAGES = [
   ['2장 — 오민경의 기억 들어가기', 'mk'],
   ['2장 — 민경의 기억: 옥상 인터뷰', 'mkroof'],
   ['2장 — 민경의 기억: 화재 뒤 1층', 'mkfire'],
+  ['2장 둘째 날 — 교무실로 (이도현)', 'dh'],
+  ['2장 — 이도현의 기억 들어가기', 'dhmem'],
 ];
 
 const findClue = name => { const c = CLUES.find(k => k.name === name); if (c) c.found = true; };
@@ -1387,6 +1702,21 @@ function devStage(stage) {
       if (stage === 'mk') {
         flags.ch2Intro = true;
         runScript('enterMinkyung');
+      }
+      return;
+    }
+    if (stage === 'dh' || stage === 'dhmem') {
+      // 민경의 기억과 첫 검증까지 끝낸 상태
+      Object.assign(flags, {
+        ch2Started: true, ch2Intro: true, mkSawNote: true, mkMusic: true, mkRoof: true, mkAsk: 'comet',
+        mkFire: true, mkDistort: true, mkDone: true, day2: true,
+      });
+      for (const c of Object.values(CONTRA)) c.found = true;
+      BURN_CLUE.found = true;
+      setupDay2();
+      if (stage === 'dhmem') {
+        flags.dhIntro = true;
+        runScript('enterDohyun');
       }
       return;
     }

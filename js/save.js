@@ -61,24 +61,26 @@ const Save = (() => {
     Object.assign(route, JSON.parse(JSON.stringify(s.route)));
     for (const c of CLUES) c.found = s.clues.includes(c.name);
 
-    const inMemory = flags.memory === 'minkyung';
-    setPlayerLook(inMemory ? 'minkyung86' : null);
-    ambient = flags.ch2Started && !inMemory ? DUSK : null;
-    if (inMemory && flags.mkFire && !flags.mkDistort) {
-      smoke = 'old1';
-      startFireBell();
-    }
+    const memory = flags.memory;
+    setPlayerLook(memory ? MEMORY_LOOK[memory] : null);
+    ambient = flags.ch2Started && !memory && !flags.day2 ? DUSK : null;
+    const burning = (memory === 'minkyung' && flags.mkFire && !flags.mkDistort)
+      || (memory === 'dohyun' && flags.dhFire && !flags.dhFought);
+    if (burning) smoke = 'old1';
+    if (memory === 'minkyung' && flags.mkFire && !flags.mkDistort) startFireBell();
     setFloor(s.floor, { x: s.x / TILE, y: s.y / TILE, dir: s.dir });
     // 하율은 저장 당시 자리 그대로, 따라오는 길(trail)만 그 자리에서 다시 시작
     Object.assign(companion, s.companion);
     trail = [{ x: companion.x, y: companion.y }, { x: player.x, y: player.y }];
 
     if (flags.ch2Started && !flags.ch2Intro) addActor('teacher', 39.5, 9, 'down', 1);
-    if (inMemory && flags.mkMusic && !flags.mkFire) {
+    if (flags.day2 && !memory) addActor('principal', 57.5, 23.6, 'down', 1);
+    if (memory === 'minkyung' && flags.mkMusic && !flags.mkFire) {
       addActor('band86', 12.5, 26, 'down', 'old2');
       addActor('band86', 16.5, 26, 'down', 'old2');
       addActor('band86', 22.5, 25, 'left', 'old2');
     }
+    if (memory === 'dohyun') addMemoryActors();
     last = JSON.stringify({ ...snapshot(), savedAt: 0 });
   }
 

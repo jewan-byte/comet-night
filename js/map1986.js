@@ -122,8 +122,9 @@ function buildPast1F() {
   b.obj('boxes', 61, 11);
   b.light(56.5, 4.5, 72, '255,40,30');
   b.light(52.5, 10.5, 30, '255,130,50');
-  // 오민경의 기억: 화재 뒤 준비실 앞 복도에 오면 어긋난 기억 장면
-  b.warps.push({ x: 48, y: 16, w: 14, h: 4, script: 'mkDistort', once: 'mkDistort' });
+  // 준비실 앞 복도·준비실 안: 누구의 기억이냐에 따라 장면이 다르다 (story.js 의 pastPrepHall / pastPrepRoom)
+  b.warps.push({ x: 48, y: 16, w: 14, h: 4, script: 'pastPrepHall' });
+  b.warps.push({ x: 52, y: 4, w: 10, h: 10, script: 'pastPrepRoom' });
 
   // 중앙 현관
   b.room('중앙 현관', 2, 22, 12, 10, 'oldhall');
@@ -209,6 +210,9 @@ function buildPast2F() {
   // 오민경의 기억: 음악실에 들어서면 관악부 선배들 장면
   b.warps.push({ x: 2, y: 22, w: 26, h: 9, script: 'mkMusic', once: 'mkMusic' });
 
+  // 이도현의 기억: 음악실 앞 복도를 지날 때 관악부가 말을 건다 (story.js 의 pastHall2)
+  b.warps.push({ x: 20, y: 16, w: 10, h: 4, script: 'pastHall2' });
+
   pastBottomClassroom(b, '2학년 5반', 40);
 
   b.room('화장실', 56, 22, 6, 9, 'lab');
@@ -233,6 +237,9 @@ function buildPast3F() {
   pastTopClassroom(b, '3학년 3반', 34);
   pastTopClassroom(b, '3학년 4반', 50, 12);
   pastBottomClassroom(b, '3학년 5반', 2);
+
+  // 이도현의 기억: 원판을 들고 3층 계단에 올라오면 아래층에서 '펑' (story.js 의 pastStairs3)
+  b.warps.push({ x: 30, y: 22, w: 8, h: 8, script: 'pastStairs3' });
 
   // 신문부실
   b.room('신문부실', 18, 22, 10, 9, 'wood');
