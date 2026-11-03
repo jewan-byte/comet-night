@@ -442,8 +442,18 @@ const MINIGAMES = {
         if (m.phase === 'scan') {
           const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
           m.c = Math.max(C0, Math.min(C1, m.c + dx * 60 * dt * (keys.has('run') ? 2.5 : 1)));
+          const done = m.found.size === EVENTS.length;
+          // 다 찾은 뒤엔 바를 찾은 소리 위에 올리기만 해도 그 소리가 다시 들린다
+          const over = eventAt(m.c);
+          if (done && dx && over) m.heard = over.label;
           if (tapped.has('interact')) {
             const e = eventAt(m.c);
+            // 다 찾았으면 빈 곳에서 F → 질문으로
+            if (done && !e) {
+              m.phase = 'quiz';
+              m.t = 0;
+              return null;
+            }
             if (e) m.c = e.c;   // 그 소리가 시작되는 자리로 맞춘다 (시각이 해설과 어긋나지 않게)
             m.heard = e ? e.label : '…합주 소리뿐이다.';
             if (e && !m.found.has(e.id)) {
@@ -452,18 +462,13 @@ const MINIGAMES = {
             } else {
               Sound.sfx('move');
             }
-            // 다 찾았으면 질문으로 (다시 듣다가 사건 위에서 F 를 눌러도)
-            if (m.found.size === EVENTS.length && (!e || m.found.has(e.id))) {
-              m.phase = 'quiz';
-              m.t = 0;
-            }
           }
           return null;
         }
         // 질문: 고르고 F, Esc 면 파형으로 돌아가 다시 듣는다
         if (tapped.has('menu')) {
           m.phase = 'scan';
-          m.heard = '파형으로 돌아왔다. 다 찾았으면 F로 다시 질문에 답하자.';
+          m.heard = '소리 위에서 F로 다시 듣고, 빈 곳에서 F를 누르면 질문으로.';
           return null;
         }
         const d = (tapped.has('down') || tapped.has('right') ? 1 : 0) - (tapped.has('up') || tapped.has('left') ? 1 : 0);
@@ -512,6 +517,10 @@ const MINIGAMES = {
         // 찾은 것
         g.fillStyle = '#8fa6c8';
         g.fillText(`찾은 순간 ${m.found.size} / ${EVENTS.length}`, ox + 210, oy + 15);
+        if (m.found.size === EVENTS.length) {
+          g.fillStyle = '#ffe066';
+          g.fillText('빈 곳 F → 질문', ox + 210, oy + 29);
+        }
 
         // 파형
         rect(g, ox + WAVE.x - 2, oy + WAVE.y - 2, WAVE.w + 4, WAVE.h + 4, '#0e1420');
