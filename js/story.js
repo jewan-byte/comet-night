@@ -1325,7 +1325,6 @@ const DEV_STAGES = [
   ['2층 호출 직후 — 하율은 3층에', 'away'],
   ['신문부 합류 후', 'news'],
   ['1장 마무리 직전 — 서랍 열기 전', 'ch1ready'],
-  ['1장 끝난 뒤', 'ch1done'],
   ['2장 시작 — 방과 후, 과학실로', 'ch2'],
   ['2장 — 오민경의 기억 들어가기', 'mk'],
   ['2장 — 민경의 기억: 옥상 인터뷰', 'mkroof'],
@@ -1419,7 +1418,12 @@ function pickDev(id) {
     const [, where, x, y] = DEV_SPOTS[Number(id.slice(3))];
     stopStory();
     // 1986년 회상엔 하율이 없다 (2026년으로 돌아오면 다시 따라온다)
-    companion.following = companion.visible = !isPast(where) && flags.friendJoined;
+    // 기억 속에서 현재 장소로 나오면 기억 상태(외형·연기·화재벨)를 정리한다
+    if (!isPast(where) && flags.memory) endMemory();
+    // 하율이 신문부 호출로 따로 가 있는 동안엔 다시 따라오지 않는다
+    const friendAway = flags.calledAway && !flags.metNewsroom;
+    companion.visible = !isPast(where) && flags.friendJoined;   // 따로 가 있으면 신문부실에 보인다
+    companion.following = companion.visible && !friendAway;
     setFloor(where, { x, y, dir: 'down' });
     DevMenu.close();
   } else if (id.startsWith('stage:')) {
