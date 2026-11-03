@@ -112,7 +112,7 @@ function buildPast1F() {
   b.obj('shelf', 52, 4, 3, 1);
   // 시계·난로·멀티탭은 누구의 기억이냐에 따라 보이는 게 다르다 (story.js 의 pastPrepLook)
   b.dec('clock', 55, 2, 1, 2, { script: 'pastPrepLook', look: 'clock', prompt: '조사하기' });
-  b.dec('safelight', 56, 2, 1, 2, look('빨간 안전등. 준비실 전체가 붉게 물들어 있다.', '…여기를 암실로 쓰고 있었구나.'));
+  b.dec('safelight', 56, 2, 1, 2, look('빨간 안전등. 과학준비실 전체가 붉게 물들어 있다.', '…여기를 암실로 쓰고 있었구나.'));
   b.dec('dryline', 57, 2, 3, 2, look('줄에 사진들이 빨래집게로 걸려 마르고 있다.', '새까만 밤하늘에 별이 점점이 찍힌 사진들.'));
   b.obj('cabinet', 60, 4, 2, 1, look('서류함. 맨 아래 칸의 "천문부" 이름표가 아직 새것이다.'));
   b.obj('devtable', 55, 8, 3, 2, look('현상액 쟁반 세 개가 나란히 놓여 있다.', '시큼한 약품 냄새. 첫 번째 쟁반 속에서 사진 한 장이 천천히 떠오르고 있다.'));
@@ -123,7 +123,7 @@ function buildPast1F() {
   b.obj('boxes', 61, 11);
   b.light(56.5, 4.5, 72, '255,40,30');
   b.light(52.5, 10.5, 30, '255,130,50');
-  // 준비실 앞 복도·준비실 안: 누구의 기억이냐에 따라 장면이 다르다 (story.js 의 pastPrepHall / pastPrepRoom)
+  // 과학준비실 앞 복도·과학준비실 안: 누구의 기억이냐에 따라 장면이 다르다 (story.js 의 pastPrepHall / pastPrepRoom)
   b.warps.push({ x: 48, y: 16, w: 14, h: 4, script: 'pastPrepHall' });
   b.warps.push({ x: 52, y: 4, w: 10, h: 10, script: 'pastPrepRoom' });
 
