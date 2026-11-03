@@ -1080,6 +1080,26 @@ const PEOPLE = {
   minkyung86: {
     pal: { ...PLAYER_PAL, hair: '#1e1612', hairHi: '#3a2a20', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#d9b43a' },
   },
+  // 1986년 천문부: 부장 한정우(빛찬의 아빠), 3학년 이도현 — 같은 남색 교복, 자주색 넥타이
+  jeongwoo86: {
+    pal: { ...PLAYER_PAL, hair: '#2a2420', hairHi: '#463a30', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
+  },
+  dohyun86: {
+    pal: { ...PLAYER_PAL, hair: '#15151a', hairHi: '#2e2e38', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
+  },
+  // 1986년 관악부 선배
+  band86: {
+    pal: { ...PLAYER_PAL, hair: '#2a1e18', hairHi: '#44342a', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
+  },
+  // 연기 너머 어른의 그림자 (얼굴도 옷도 거무스름하다)
+  shadow: {
+    pal: {
+      hair: '#16161c', hairHi: '#1e1e26', skin: '#2a2a34', skinSh: '#22222a', eye: '#2a2a34',
+      blazer: '#1e1e26', blazerDk: '#16161c', shirt: '#2a2a34', tie: '#2a2a34',
+      pants: '#16161c', pantsDk: '#121218', shoe: '#0e0e12',
+    },
+    tie: false,
+  },
   // 신문부 부장 (3학년): 짧은 검은 머리, 안경
   editor: {
     pal: { ...PLAYER_PAL, hair: '#15151a', hairHi: '#33333c' },

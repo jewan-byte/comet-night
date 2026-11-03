@@ -14,9 +14,31 @@
 const ME = '빛찬';
 const FRIEND = '하율';
 
+// 선택에 따라 쌓이는 숨은 값 — 플레이어에겐 보여 주지 않고 엔딩만 가른다
+//   evidence: 밝혀낸 진실 (모순 발견, 실험 승리)
+//   heart:    증인들이 빛찬을 믿는 정도 (몰아붙이기 vs 공감)
+//   article:  하율이 특종을 서두르는 정도
+const route = { evidence: 0, article: 0, heart: { minkyung: 0, dohyun: 0, dad: 0 } };
+const addEvidence = n => { route.evidence += n; };
+const addArticle = n => { route.article += n; };
+const addHeart = (who, n) => { route.heart[who] += n; };
+
+// 화재벨: 울리기 시작하면 끌 때까지 따르릉 반복
+let fireBell = null;
+function startFireBell() {
+  stopFireBell();
+  Sound.sfx('bell');
+  fireBell = setInterval(() => Sound.sfx('bell'), 900);
+}
+function stopFireBell() {
+  clearInterval(fireBell);
+  fireBell = null;
+}
+
 // 이야기 진행 상태 (조사·대화로 바뀐다)
 const flags = {};
 function resetFlags() {
+  Object.assign(route, { evidence: 0, article: 0, heart: { minkyung: 0, dohyun: 0, dad: 0 } });
   for (const k of Object.keys(flags)) delete flags[k];
   Object.assign(flags, {
     talkedDad: false,    // 아침 먹으며 아빠와 얘기함
@@ -29,11 +51,27 @@ function resetFlags() {
     metNewsroom: false,  // 3층 신문부실 장면을 봄 (하율 다시 합류)
     ch1Ready: false,     // 1장 핵심 단서를 다 모음 → 준비실 서랍을 열 수 있다
     foundLog: false,     // 천문부 관측일지를 찾음
+    gaveLog: false,      // 1장 끝: 민경 선생님에게 일지를 건넸음
+    keepClub: false,     // 집 ①: 아빠에게 "동아리 끝까지 해 볼 거야"
+    pushedDad: false,    // 집 ②: 사진 얘기를 캐물음
+    wantAskDad: false,   // 학교 ③: "아빠한테 먼저 물어보고 싶어"
     ch1Done: false,      // 1장 끝 (민경 선생님 등장까지 봄)
     ch2Started: false,   // 2장 시작: 방과 후, 과학실로 가야 한다
     ch2Intro: false,     // 과학실에서 선생님 이야기를 듣기 시작함
     memory: null,        // 지금 누구의 기억 속인지 ('minkyung' …), 현실이면 null
+    // 오민경의 기억
+    mkSawNote: false,    // 잠긴 옥상 문의 쪽지를 봄
+    mkMusic: false,      // 음악실 관악부 장면 → 4시, 옥상 문이 열린다
+    mkRoof: false,       // 옥상 인터뷰 장면
+    mkAsk: null,         // 인터뷰에서 고른 질문 ('comet' | 'photo' | 'why')
+    saw2061: false,      // 정우의 "2061년엔 내 애랑" — 숨은 장면 「2061」 조건
+    mkFire: false,       // 화재벨이 울림
+    mkDistort: false,    // 1층에서 어긋난 기억 장면
+    mkDone: false,       // 기억에서 돌아와 선택까지 끝남
+    articleOk: false,    // 하율에게 기사를 써도 된다고 함
   });
+  smoke = null;
+  stopFireBell();
   companion.visible = false;
   companion.following = false;
   actors.length = 0;
@@ -72,22 +110,67 @@ const BURN_CLUE = {
 };
 CLUES.push(BURN_CLUE);
 
+// 기억 속에서 발견한 모순 (회상이 끝나면 수첩에 적힌다 — 3장 실험의 재료)
+const CONTRA = {
+  window: {
+    name: '모순: 빨간 창문',
+    text: [
+      '선생님은 "옥상에서 보니 1층 창문이 이미 시뻘겠다 — 불길이었다"고 기억한다.',
+      '하지만 기억 속 정우 선배는 분명히 말했다. "저건 암실 안전등이야."',
+      '그 시각, 누군가 암실에서 사진을 현상하고 있었다는 뜻이다.',
+    ],
+  },
+  lamp: {
+    name: '모순: 램프를 든 정우',
+    text: [
+      '선생님의 기사: "천문부 부장이 불붙은 램프를 들고 준비실에서 나왔다."',
+      '하지만 정우 선배는 화재벨이 울릴 때까지 옥상에서 혜성 고도를 적고 있었다.',
+      '벨이 울리고 나서 램프 뚜껑을 덮고 계단으로 뛰어갔다. 준비실 "안"에서 나올 수가 없다.',
+    ],
+  },
+  absent: {
+    name: '모순: "없었던 거야"',
+    text: [
+      '연기 속에서 정우 선배가 누군가에게 낮게 말했다. "…넌 여기 없었던 거야. 가!"',
+      '준비실에서 나온 사람은 새 원판을 가지러 내려간 이도현 선배. 완장 끝이 그을려 있었다.',
+    ],
+  },
+  shadow: {
+    name: '모순: 어른의 그림자',
+    text: [
+      '연기 너머로 납작한 상자를 안은 어른의 그림자가 현관 쪽으로 사라졌다.',
+      '선생님은 이 얘기를 기사에 쓰지 않았다.',
+      '그날 숙직은 신임 박영철 선생님. 순찰은… 한 번도 오지 않았다.',
+    ],
+  },
+};
+for (const c of Object.values(CONTRA)) {
+  Object.assign(c, { place: '2장 · 오민경의 기억', found: false, story: true });
+  CLUES.push(c);
+}
+
 // ── 과학실 실험 (experiment.js) — 주장마다 대사와 단서 반응 ──
 // 페이지 형식은 대사창과 같다. clues: 단서 이름 → { dmg: 깎는 신뢰도, text, unlock: 실험 기준이 생김 }
+//   목록에 없는 단서나 dmg ≤ 0 인 단서를 내밀면 빛찬의 정신력이 깎인다
+// portrait: 주장하는 사람 (PEOPLE 이름), prop: 손에 든 것 ('paper' 학보 | 'lamp' 램프), speaker: 대사 이름표
 const EXPERIMENTS = {
+  // 민경 회상 직후, 첫 검증 — 1986년 학보 기사의 "램프 부주의"
   combustion: {
     title: '연소 실험',
     mini: 'combustion',
-    claim: '"알코올램프가 넘어져서 불이 났다"',
-    source: '— 기억 속의 이도현 (1986년, 3학년)',
+    portrait: 'minkyung86',
+    prop: 'paper',
+    speaker: '기억 속 민경',
+    claim: '"천문부 부장의 알코올램프 부주의로 불이 났다"',
+    source: '— 동사란 학보 1986년 4월호, 기자 1학년 오민경',
     intro: [
-      '기억 속의 이도현이 알코올램프를 치켜든다.',
-      '주장 「알코올램프가 넘어져서 불이 났다」가 앞을 가로막는다!',
+      '기억 속의 오민경이 학보를 펼쳐 든다.',
+      '40년 동안 아무도 의심하지 않은 기사. 이제 직접 검증할 차례다.',
     ],
     observe: [
-      ['주장을 살펴본다.', '학보에 따르면 알코올램프는 준비실 작업대 위에 있었다.'],
+      ['기사를 다시 읽는다.', '"알코올램프는 준비실 작업대 위에 있었다. 부장이 끄는 것을 잊었다."'],
       ['불은 위로, 그리고 옆으로 번진다.', '그래서 벽에 남는 그을음은 V자 모양이 된다.'],
-      ['V자의 꼭짓점… 거기가 불이 처음 붙은 곳이다.', '준비실 그을음이 어떤 모양이었는지 떠올려 보자. ([단서])'],
+      ['V자의 꼭짓점… 거기가 불이 처음 붙은 곳이다.', '준비실 그을음이 어떤 모양이었는지 떠올려 보자. ([단서 제시])'],
     ],
     clues: {
       '그을음 자국': {
@@ -104,7 +187,22 @@ const EXPERIMENTS = {
         text: [
           '관측일지를 펼쳐 보였다.',
           { who: ME, text: '"3. 21 새벽" — 천문부는 옥상에서 관측 중이었어. 준비실에 램프를 켜 둘 이유가 없잖아.' },
-          '주장이 움찔했다.',
+          '기억 속 민경이 움찔했다.',
+        ],
+      },
+      '모순: 램프를 든 정우': {
+        dmg: 20,
+        text: [
+          { who: ME, text: '정우 선배는 화재벨이 울릴 때까지 옥상에서 혜성 고도를 적고 있었어요.' },
+          { who: ME, text: '램프도 옥상에 있었고요. 뚜껑을 덮고 들고 내려간 건 벨이 울린 "뒤"예요.' },
+          '학보를 든 손이 흔들렸다.',
+        ],
+      },
+      '모순: 빨간 창문': {
+        dmg: 15,
+        text: [
+          { who: ME, text: '불나기 전부터 준비실 창문은 빨갰어요. 암실 안전등이요.' },
+          { who: ME, text: '그 시각 준비실엔 누군가 있었다는 거예요. 천문부가 아니라.' },
         ],
       },
       '멈춘 시계': {
@@ -116,26 +214,23 @@ const EXPERIMENTS = {
       },
       '1986년 학보': {
         dmg: -5,
-        text: ['학보를 내밀었다.', '…학보도 "램프 부주의"라고 적고 있다. 오히려 주장에 힘을 실어 줬다.'],
-      },
-      '가스 밸브 경고': {
-        dmg: 0,
-        text: ['"실험 후 가스 밸브 확인!"', '…준비실 화재와는 상관없는 경고문이다.'],
+        text: ['학보를 내밀었다.', '…이건 이 주장 그 자체다. 오히려 주장에 힘을 실어 줬다.'],
       },
     },
-    wrongClue: name => [`「${name}」… 이 주장과는 관계가 없어 보인다.`],
-    noTarget: ['비교할 기준이 없다.', '그을음이 어떤 모양이었는지 먼저 떠올려 보자. ([단서])'],
+    wrongClue: name => [`「${name}」을(를) 내밀었다.`, '…이 주장과는 관계가 없다.'],
+    noTarget: ['비교할 기준이 없다.', '그을음이 어떤 모양이었는지 먼저 떠올려 보자. ([단서 제시])'],
     expDone: ['이미 확인한 실험이다.'],
-    notYet: ['아직 근거가 부족하다.', '주장의 신뢰도를 더 깎아야 한다.'],
-    broken: ['주장의 신뢰도가 바닥났다.', '지금이라면… [반박]할 수 있다!'],
-    taunts: ['학보에 다 나와 있잖아.', '램프였어. 내가 봤다고.', '40년이나 지난 일이야.', '다 끝난 일을 왜 들쑤셔?'],
-    tauntsWeak: ['…램프였어. 그래야만 해.', '콘센트라니… 그럼 그날 밤 정우는…'],
-    // 반격 순서 (experiment.js 의 ATTACKS): 비커 비, 바닥에서 솟는 불, 던지는 독 플라스크, 시험관 소나기
-    attacks: ['beaker', 'flame', 'poison', 'tube'],
+    notYet: ['아직 근거가 부족하다.', '성급했다. 주장의 신뢰도를 더 깎아야 한다.'],
+    broken: ['기사의 신뢰도가 바닥났다.', '지금이라면… [반박]할 수 있다!'],
+    // 틀렸을 때 기억 속 민경의 한마디 (흔들리기 시작하면 tauntsWeak)
+    taunts: ['내가 봤어. 내 눈으로.', '학보에 실린 기사야. 선생님들도 다 확인했어.', '천문부 말고 그 시간에 누가 있었겠어?'],
+    tauntsWeak: ['…램프였어. 분명히 램프였어.', '그럼… 내가 본 건 뭐였는데?'],
     win: [
-      { who: ME, text: '알코올램프는 작업대 위에 있었어. 그런데 그을음의 꼭짓점은 바닥, 콘센트 앞이야.' },
-      { who: ME, text: '불은 램프에서 시작된 게 아니야.' },
-      '주장 「알코올램프가 넘어져서 불이 났다」를 반박했다!',
+      { who: ME, text: '램프는 작업대 위에 있었다고 하셨죠. 그런데 그을음의 꼭짓점은 바닥, 콘센트 바로 앞이에요.' },
+      { who: ME, text: '그리고 그 시각 정우 선배는 옥상에 있었어요.' },
+      { who: ME, text: '불은 램프에서 시작된 게 아니에요.' },
+      '학보가 손에서 미끄러져 떨어졌다.',
+      '기사 「알코올램프 부주의로 불이 났다」를 반박했다!',
     ],
   },
 };
@@ -147,6 +242,11 @@ resetFlags();
 const STOP = Symbol('stop');
 const alive = run => { if (run !== storyRun) throw STOP; };
 const say = (...pages) => { const run = storyRun; return openDialog(pages).then(() => alive(run)); };
+// 선택지: 마지막 페이지에서 options 중 하나를 고르면 그 번호로 끝난다
+const choose = (pages, options) => {
+  const run = storyRun;
+  return new Promise(r => openDialog(pages, { options, index: 0, onPick: r })).then(i => { alive(run); return i; });
+};
 const wait = sec => { const run = storyRun; return new Promise(r => setTimeout(r, sec * 1000)).then(() => alive(run)); };
 const fadeAsync = action => new Promise(r => fadeTo(action, r));
 const fadeInAsync = () => new Promise(r => fadeIn(r));
@@ -166,22 +266,49 @@ function setupAfterSchool() {
   if (!actors.length) addActor('teacher', 39.5, 9, 'down', 1);   // 실험대 사이, 문에서 보이는 자리
 }
 
+// 오민경의 기억으로: 하율·노을·현재 인물은 사라지고, 빛찬은 1학년 오민경이 된다
+function beginMinkyungMemory(where, at) {
+  ambient = null;
+  actors.length = 0;
+  companion.following = false;
+  companion.visible = false;
+  flags.memory = 'minkyung';
+  setPlayerLook('minkyung86');
+  setFloor(where, at);
+}
+
+// 기억에서 현재로: 빛찬으로 돌아오고 방과 후 노을
+function endMemory() {
+  stopFireBell();
+  smoke = null;
+  actors.length = 0;
+  flags.memory = null;
+  setPlayerLook(null);
+  ambient = DUSK;
+}
+
 const hasClue = name => CLUES.some(c => c.name === name && c.found);
 
 // 인물(하율 또는 컷신용 NPC)을 (x, y)까지 sec초 동안 걷게 (타일 단위)
+// 플레이어는 main.js 가 매 프레임 걷기 상태를 지우므로 scriptAnim 에 따로 센다
 async function walkActor(a, x, y, sec) {
   const sx = a.x, sy = a.y, ex = x * TILE, ey = y * TILE;
+  const animKey = a === player ? 'scriptAnim' : 'anim';
   a.dir = Math.abs(ex - sx) > Math.abs(ey - sy) ? (ex > sx ? 'right' : 'left') : (ey > sy ? 'down' : 'up');
   a.moving = true;
+  a[animKey] = FRAME_TIME;   // 첫 걸음부터 발을 뗀다
   const steps = Math.max(1, Math.round(sec * 60));
-  for (let i = 1; i <= steps; i++) {
-    a.x = sx + (ex - sx) * i / steps;
-    a.y = sy + (ey - sy) * i / steps;
-    a.anim += 1 / 60;
-    await wait(1 / 60);
+  try {
+    for (let i = 1; i <= steps; i++) {
+      a.x = sx + (ex - sx) * i / steps;
+      a.y = sy + (ey - sy) * i / steps;
+      a[animKey] += 1 / 60;
+      await wait(1 / 60);
+    }
+  } finally {
+    a.moving = false;
+    a[animKey] = 0;
   }
-  a.moving = false;
-  a.anim = 0;
 }
 const walkCompanion = (x, y, sec) => walkActor(companion, x, y, sec);
 
@@ -208,11 +335,16 @@ function statusLines() {
   const here = floor.map.n;
   let doing = null;
   if (flags.memory === 'minkyung') {
-    return [{ text: '오민경의 기억 — 1986년 3월 21일 새벽' }, { text: '옥상 관측회를 취재하러 가는 중' }];
+    let now = '옥상 관측회를 취재하러 가는 중';
+    if (flags.mkFire) now = '불이 났다 — 1층으로!';
+    else if (flags.mkMusic) now = '4시 — 옥상으로 가는 중';
+    else if (flags.mkSawNote) now = '4시까지 숨어 있을 곳을 찾는 중 (아래층에서 음악 소리)';
+    return [{ text: '오민경의 기억 — 1986년 3월 21일 새벽' }, { text: now }];
   }
   if (isPast(here)) return [{ text: '1986년 3월 21일 새벽 — 기억 속' }];
   if (here === 'home') doing = flags.talkedDad ? '현관으로 나가는 중' : '등교 준비 중';
   else if (here === 'bus') doing = '학교 가는 중';
+  else if (flags.mkDone) doing = '이도현 교장 선생님을 찾아가야 한다 (다음 이야기 준비 중)';
   else if (flags.ch2Started && !flags.ch2Intro) doing = '방과 후 — 과학실로 가는 중';
   else if (flags.ch1Done) doing = '방과 후 과학실 약속을 기다리는 중';
   else if (flags.ch1Ready && !flags.foundLog) doing = '준비실 "천문부" 칸을 확인하러 가는 중';
@@ -299,9 +431,24 @@ const SCRIPTS = {
       await say(
         '된장국에 계란말이. 아빠는 맞은편에서 신문을 넘긴다.',
         { who: '아빠', text: '오늘도 늦어? 그… 과학탐구부.' },
-        { who: ME, text: '응. 폐부 심사 전에 동아리방 정리해야 돼.' },
-        { who: '아빠', text: '…그래. 너무 늦게 다니지는 말고.' },
+        { who: '아빠', text: '부원도 너 하나라며. 힘들면 그냥 접어도 돼.' },
       );
+      // 선택 (집 ①): 동아리를 어떻게 할지 — 아빠의 마음
+      const keepClub = await choose(['아빠가 신문 너머로 힐끗 쳐다본다.'], ['"끝까지 해 볼 거야."', '"…그냥 정리만 하고 올게."']) === 0;
+      flags.keepClub = keepClub;
+      if (keepClub) {
+        addHeart('dad', 1);
+        await say(
+          { who: ME, text: '끝까지 해 볼 거야. 폐부 심사, 통과할 거야.' },
+          '아빠가 신문을 내려놓았다. 잠깐, 아주 잠깐 웃은 것 같았다.',
+          { who: '아빠', text: '…그래. 하고 싶은 건 해 봐야지.' },
+        );
+      } else {
+        await say(
+          { who: ME, text: '…그냥 정리만 하고 올게. 어차피 혼자라.' },
+          { who: '아빠', text: '그래. 너무 늦게 다니지는 말고.' },
+        );
+      }
       // 밥 먹기 전에 사진을 이미 봤다면 이 자리에서 바로 물어본다
       if (flags.sawPhoto) await SCRIPTS.askPhoto();
     } else if (flags.sawPhoto && !flags.askedPhoto) {
@@ -321,9 +468,23 @@ const SCRIPTS = {
       '신문을 넘기던 아빠의 손이 멈췄다.',
       { who: '아빠', text: '……' },
       { who: '아빠', text: '다 옛날 얘기야.' },
-      { who: '아빠', text: '버스 시간 다 됐다. 얼른 가.' },
-      '아빠는 신문으로 얼굴을 가렸다.',
     );
+    // 선택 (집 ②): 더 캐물을지, 기다려 줄지 — 아빠의 마음
+    const patient = await choose(['아빠는 더 말하고 싶지 않은 눈치다.'], ['"…알았어. 나중에 얘기해 줘."', '"옛날 얘기면 왜 말을 안 해?"']) === 0;
+    flags.pushedDad = !patient;
+    if (patient) {
+      addHeart('dad', 1);
+      await say(
+        { who: '아빠', text: '…그래. 언젠간.' },
+        { who: '아빠', text: '버스 시간 다 됐다. 얼른 가.' },
+      );
+    } else {
+      await say(
+        { who: '아빠', text: '빛찬아.' },
+        { who: '아빠', text: '…그만. 버스 시간 다 됐다.' },
+        '아빠는 신문으로 얼굴을 가렸다.',
+      );
+    }
   },
 
   // 현관으로 나가기 → 버스 → 학교
@@ -352,7 +513,8 @@ const SCRIPTS = {
         '…아빠가 천문부였다니.',
         '사진 속 망원경, 동아리방에 있는 거랑 똑같이 생겼었는데.',
       );
-      if (flags.askedPhoto) await say('"다 옛날 얘기야."', '…옛날 얘기면, 왜 그렇게까지 피하는 걸까.');
+      if (flags.askedPhoto && flags.pushedDad) await say('"…그만."', '아빠가 그렇게 딱 잘라 말한 건 처음이었다.');
+      else if (flags.askedPhoto) await say('"…그래. 언젠간."', '언젠가는, 얘기해 줄까.');
       else await say('왜 한 번도 그 얘기를 안 했을까.');
     } else {
       await say('폐부 심사까지 4주.', '그 전에 동아리방 정리부터 끝내야 한다.');
@@ -397,9 +559,22 @@ const SCRIPTS = {
       { who: FRIEND, text: '내가 들어가 줄게. 두 명이면 심사 볼 만하지?' },
       { who: ME, text: '…진심이야?' },
       { who: FRIEND, text: '대신 조건이 있어. 뭐가 나오든 특종은 내 거다?' },
-      { who: ME, text: '…알았어. 고마워, 하율아.' },
-      { who: FRIEND, text: '좋아, 일단 동아리방부터 가자!' },
     );
+    // 선택 (학교 ①): 하율의 조건 — 기사
+    const deal = await choose(['하율이 손을 내밀었다.'], ['"좋아. 특종은 네 거."', '"…특종보다 동아리가 먼저야."']) === 0;
+    if (deal) {
+      addArticle(1);
+      await say(
+        { who: ME, text: '좋아. 뭐가 나오든 특종은 네 거.' },
+        { who: FRIEND, text: '거래 성립! 이제부터 넌 내 취재원이다.' },
+      );
+    } else {
+      await say(
+        { who: ME, text: '…특종보다 동아리가 먼저야. 그래도 고마워, 하율아.' },
+        { who: FRIEND, text: '쳇, 깐깐하긴. 알았어, 동아리 먼저.' },
+      );
+    }
+    await say({ who: FRIEND, text: '좋아, 일단 동아리방부터 가자!' });
     flags.friendJoined = true;
     companion.following = true;
     placeCompanionBehind();
@@ -469,8 +644,23 @@ const SCRIPTS = {
       { who: '부장', text: '창고 정리하다가 1986년 학보가 나왔거든. 과학준비실 화재 기사가 실려 있더라.' },
       { who: FRIEND, text: '준비실 공사 특집 쓰려고 했는데… 이거 완전 특종 냄새야.' },
       { who: '부장', text: '그 서류함에 넣어 뒀어. 사진 원판 상자도 같이 나왔고.' },
-      { who: FRIEND, text: '같이 보자, 빛찬아!' },
+      { who: '부장', text: '과학탐구부, 너도 이거 같이 파 볼래? 뭐 나오면 우리 신문부에 제일 먼저 넘기고.' },
     );
+    // 선택 (학교 ②): 신문부 부장의 제안 — 기사
+    const share = await choose(['부장이 빛찬을 빤히 본다.'], ['"네, 먼저 넘길게요."', '"…저희가 먼저 확인할게요."']) === 0;
+    if (share) {
+      addArticle(1);
+      await say(
+        { who: '부장', text: '좋아, 말 통하네. 하율아, 이 친구 잘 챙겨.' },
+        { who: FRIEND, text: '같이 보자, 빛찬아!' },
+      );
+    } else {
+      await say(
+        { who: '부장', text: '…과학 하는 애들은 다 이렇게 깐깐한가.' },
+        { who: '부장', text: '좋아, 확인 끝나면 알려 줘.' },
+        { who: FRIEND, text: '헤헤. 같이 보자, 빛찬아!' },
+      );
+    }
     companion.visible = true;
     companion.following = true;
     placeCompanionBehind();
@@ -500,7 +690,33 @@ const SCRIPTS = {
       { who: FRIEND, text: '1986년 3월, 천문부가 새벽에 옥상에서 혜성을 보기로 했어.' },
       { who: FRIEND, text: '그날 밤 준비실에 불이 났고… 시계는 4시 40분에 멈췄지.' },
       { who: FRIEND, text: '학보에선 "천문부 학생 부주의"로 끝. 천문부는 그대로 폐지.' },
-      { who: ME, text: '…근데 준비실 서류함에 "천문부" 칸이 아직 남아 있었어.' },
+      {
+        who: FRIEND,
+        text: hasClue('40년 전 2학년 3반')
+          ? '…근데 빛찬아. 이거 계속 파도 괜찮아? 2학년 3반 사진에 너네 아빠 이름도 있었잖아.'
+          : flags.sawPhoto
+            ? '…근데 빛찬아. 이거 계속 파도 괜찮아? 너네 아빠도 1986년 천문부였다며.'
+            : '…근데 빛찬아. 이거 계속 파도 괜찮을까? 40년 전 일이라지만, 누군가한텐 아픈 얘기일 텐데.',
+      },
+    );
+    // 선택 (학교 ③): 아빠 일일지도 모르는 걸 계속 파헤칠지 — 증거 / 아빠의 마음
+    const dig = await choose(['하율이 조심스럽게 물었다.'], ['"그러니까 더 알아야 돼."', '"…아빠한테 먼저 물어보고 싶어."']) === 0;
+    flags.wantAskDad = !dig;
+    if (dig) {
+      addEvidence(1);
+      await say(
+        { who: ME, text: '그러니까 더 알아야 돼. 아빠가 왜 말을 안 하는지.' },
+        { who: FRIEND, text: '…좋아. 그럼 끝까지 가 보자.' },
+      );
+    } else {
+      addHeart('dad', 1);
+      await say(
+        { who: ME, text: '…아빠한테 먼저 물어보고 싶어. 근데 그러려면 뭘 물어야 할지는 알아야겠지.' },
+        { who: FRIEND, text: '응. 그럼 물어볼 거리부터 찾자.' },
+      );
+    }
+    await say(
+      { who: ME, text: '…준비실 서류함에 "천문부" 칸이 아직 남아 있었어.' },
       { who: FRIEND, text: '그거! 이름표만 보고 안은 안 열어 봤잖아.' },
       { who: ME, text: '맨 아래 칸. 다시 가 보자.' },
     );
@@ -539,9 +755,27 @@ const SCRIPTS = {
       { who: ME, text: '저기 서류함, "천문부" 칸에서요.' },
       { who: '오민경 선생님', text: '……' },
       { who: '오민경 선생님', text: '그 일지, 잠깐 나한테…' },
-      '선생님은 손을 뻗다 말고, 천천히 다시 내렸다.',
-      { who: '오민경 선생님', text: '…아니다. 방과 후에 과학실로 와. 둘 다.' },
     );
+    // 선택: 일지를 건넬까 (민경의 마음)
+    const gave = await choose(['선생님이 손을 내밀었다.'], ['일지를 건넨다', '일지를 꼭 쥔다']) === 0;
+    flags.gaveLog = gave;
+    if (gave) {
+      addHeart('minkyung', 1);
+      await say(
+        '일지를 건넸다.',
+        '선생님은 표지에 적힌 이름을 손끝으로 천천히 쓸었다.',
+        { who: '오민경 선생님', text: '…한정우.' },
+        '그러고는 조용히 일지를 다시 빛찬의 손에 쥐여 주었다.',
+        { who: '오민경 선생님', text: '너희가 찾은 거니까. 잘 갖고 있어.' },
+      );
+    } else {
+      await say(
+        '빛찬은 일지를 가슴께로 끌어당겼다.',
+        '선생님은 손을 뻗다 말고, 천천히 다시 내렸다.',
+        { who: '오민경 선생님', text: '…그래. 그게 맞겠지.' },
+      );
+    }
+    await say({ who: '오민경 선생님', text: '방과 후에 과학실로 와. 둘 다.' });
     await walkActor(teacher, 55.5, 15.9, 1.1);
     removeActor(teacher);
     await say(
@@ -583,7 +817,9 @@ const SCRIPTS = {
       '노을이 비스듬히 드는 과학실. 오민경 선생님이 실험대 사이에 서 있다.',
       { who: '오민경 선생님', text: '왔구나.' },
       { who: FRIEND, text: '선생님! 저희 여쭤볼 게 산더미예요.' },
-      { who: '오민경 선생님', text: '…그 일지, 다시 한번 보여 줄래?' },
+      flags.gaveLog
+        ? { who: '오민경 선생님', text: '…그 일지, 다시 한번 보여 줄래?' }
+        : { who: '오민경 선생님', text: '…이번엔 보여 줄 수 있겠니? 그 일지.' },
       '관측일지를 건넸다. 선생님은 뜯겨 나간 마지막 장 자리를 한참 동안 손끝으로 쓸었다.',
       { who: '오민경 선생님', text: '한정우. …네가 정우 선배 아들이구나.' },
       { who: ME, text: '아빠를… 아세요?' },
@@ -604,13 +840,7 @@ const SCRIPTS = {
     await wait(0.5);
     await new Promise(r => fadeTo(() => {
       fade.dir = 0;
-      ambient = null;
-      actors.length = 0;
-      companion.following = false;
-      companion.visible = false;
-      flags.memory = 'minkyung';
-      setPlayerLook('minkyung86');
-      setFloor('old3', MINKYUNG_START);
+      beginMinkyungMemory('old3', MINKYUNG_START);
       r();
     }));
     await showChapter('1986년 3월 21일 금요일\n새벽 3시 50분', 2.4);
@@ -625,13 +855,306 @@ const SCRIPTS = {
     );
   },
 
-  // 과학실 연소 실험 (지금은 개발자 메뉴로만 — 3장 「검증」에서 이야기에 붙인다)
+  // ── 오민경의 기억 ──
+  // 기억 속 민경의 대사 이름표는 '민경', 속마음은 서술(*)로
+
+  // 옥상 계단: 4시 전에는 잠겨 있다 (기억 밖 — 개발자 메뉴로 왔으면 그냥 올라간다)
+  async pastRoof() {
+    if (flags.memory === 'minkyung' && !flags.mkMusic) {
+      player.y -= 12;
+      player.dir = 'up';
+      if (!flags.mkSawNote) {
+        flags.mkSawNote = true;
+        await say(
+          '옥상 문이 잠겨 있다. 문에 쪽지가 붙어 있다.',
+          '"관측회 — 4시 정각 개방! 숙직 선생님 순찰(3시 50분) 끝난 뒤에 올라올 것. — 천문부"',
+          '…3시 52분. 지금쯤 순찰 도실 시간이다.',
+          '들키면 끝이야. 4시까지 어디 숨어 있어야 해.',
+          '…아래층 어딘가에서 희미하게 트럼펫 소리가 들린다.',
+        );
+      } else {
+        await say('아직 잠겨 있다. "4시 정각 개방"', '…아래층에서 음악 소리가 들린다.');
+      }
+      return;
+    }
+    await fadeAsync(() => setFloor('oldroof', { x: 20, y: 21, dir: 'up' }));
+  },
+
+  // ② 음악실: 관악부 선배들의 밤샘 합주 — 녹음기가 돌고 있다 (지금의 카세트테이프)
+  async mkMusic() {
+    if (flags.memory !== 'minkyung') return;
+    flags.mkMusic = true;
+    addActor('band86', 12.5, 26, 'down', 'old2');
+    addActor('band86', 16.5, 26, 'down', 'old2');
+    addActor('band86', 22.5, 25, 'left', 'old2');
+    player.dir = 'down';
+    await say(
+      '음악실 문틈으로 불빛과 음악이 새어 나온다.',
+      '트럼펫, 클라리넷, 작은북. 관악부 선배 셋이 둘러앉아 있다.',
+      { who: '관악부 선배', text: '어? 1학년이 이 시간에 뭐 해?' },
+      { who: '민경', text: '저, 신문부예요. 천문부 관측회 취재 왔는데… 4시까지 기다려야 해서요.' },
+      { who: '관악부 선배', text: '쉿, 쉿. 녹음 중이야.' },
+      '선배가 바닥의 커다란 녹음기를 가리켰다. 빨간 불이 깜빡이고 있다.',
+      { who: '관악부 선배', text: '축제 합주, 밤새 녹음해서 들어 보려고. 3시 55분에 카운터 000부터 돌렸어.' },
+      { who: '관악부 선배', text: '근데 오늘 숙직, 그 신임 박 선생님. 순찰을 한 번도 안 오시더라.' },
+      { who: '관악부 선배', text: '덕분에 맘 편히 분다. 너도 여기 있다 가.' },
+      '…잠시 뒤, 멀리서 4시를 알리는 종이 울렸다.',
+      { who: '민경', text: '앗, 4시! 감사합니다, 선배님들!' },
+    );
+  },
+
+  // ③ 옥상: 정우와 도현 인터뷰 → 질문 하나 → 도현이 원판을 가지러 내려감 → 빨간 창문 → 화재벨
+  async mkRoof() {
+    if (flags.memory !== 'minkyung') return;
+    flags.mkRoof = true;
+    const jeongwoo = addActor('jeongwoo86', 22.5, 10.9, 'up', 'oldroof');
+    const dohyun = addActor('dohyun86', 27.5, 10.9, 'up', 'oldroof');
+    await walkActor(player, 22.5, 15, 1.4);
+    player.dir = 'up';
+    await say(
+      '옥상 문을 열자 차가운 바람이 훅 끼쳤다.',
+      '천문대 돔 옆, 망원경 앞에 두 사람이 서 있다.',
+    );
+    jeongwoo.dir = 'down';
+    dohyun.dir = 'down';
+    await say(
+      { who: '정우', text: '어, 손님이다! 관측회 온 거야?' },
+      { who: '민경', text: '1학년 신문부 오민경입니다! 취재해도 될까요?' },
+      { who: '도현', text: '…신문부? 이 시간에 학교에 있는 거 들키면 너도 혼나.' },
+      { who: '정우', text: '괜찮아, 도현아. "누구나 환영"이라고 써 붙인 게 우리잖아.' },
+      { who: '정우', text: '난 부장 한정우. 이쪽은 3학년 이도현. 궁금한 거 있으면 물어봐.' },
+      '의자 위에서 알코올램프가 조용히 타고 있다.',
+      { who: '도현', text: '렌즈에 이슬 맺히지 말라고 켜 둔 거야. 손 녹이기도 좋고.' },
+    );
+
+    // 선택: 질문은 하나만 (다시 하면 다른 답을 들을 수 있다)
+    const q = await choose(
+      ['선배들이 바빠 보인다. 하나만 물어볼 수 있을 것 같다.'],
+      ['혜성은 어디 있어요?', '사진은 왜 찍어요?', '왜 천문부를 해요?'],
+    );
+    flags.mkAsk = ['comet', 'photo', 'why'][q];
+    if (q === 0) {
+      await say(
+        { who: '정우', text: '직접 봐. 여기, 접안렌즈.' },
+        '망원경에 눈을 댔다.',
+        '…검은 하늘에 뿌연 솜뭉치 하나. 그 뒤로 희미한 꼬리가 길게 뻗어 있다.',
+        { who: '민경', text: '이게… 76년 만에 온 혜성.' },
+        { who: '정우', text: '4시 10분, 고도 12도.' },
+        '선배가 일지에 무언가를 적었다.',
+      );
+    } else if (q === 1) {
+      await say(
+        { who: '도현', text: '원판에 찍어 둬야 나중에 별 사이 위치를 재서 궤도를 계산하지.' },
+        { who: '도현', text: '지난주 원판은 지금 준비실 암실에서 박 선생님이 현상해 주시는 중이야.' },
+        { who: '도현', text: '신임인데 사진엔 엄청 열심이셔. 오늘 숙직도 일부러 바꿔서 서셨대.' },
+      );
+    } else {
+      flags.saw2061 = true;
+      await say(
+        { who: '정우', text: '…76년에 한 번이잖아.' },
+        { who: '정우', text: '이번에 놓치면 다음은 2061년이야. 그땐 나도 아저씨겠지.' },
+        { who: '정우', text: '그래서 정했어. 2061년엔 내 애랑 같이 보려고. 오늘 본 걸 그대로 얘기해 주면서.' },
+        { who: '도현', text: '애는 무슨. 여자 친구부터 만들어.' },
+        '두 선배가 낄낄 웃었다. 입김이 하얗게 흩어졌다.',
+      );
+    }
+
+    await say(
+      { who: '정우', text: '어, 원판 다 썼다. 도현아, 준비실 가서 새 원판 좀 가져와.' },
+      { who: '도현', text: '…지금? 박 선생님 암실 쓰고 계실 텐데.' },
+      { who: '정우', text: '살짝 들어갔다 나와. 4시 반 전에 한 장 더 찍어야 돼.' },
+    );
+    await walkActor(dohyun, 27.5, 18, 0.8);
+    await walkActor(dohyun, 20, 21.5, 0.9);
+    removeActor(dohyun);
+
+    await say(
+      '난간 너머로 학교 건물을 내려다보았다.',
+      '…1층 창문 하나가 시뻘겋게 빛나고 있다.',
+      { who: '민경', text: '선배! 저기 1층 창문 빨개요. 불… 난 거 아니에요?' },
+      { who: '정우', text: '아, 저건 암실 안전등이야. 사진 현상할 땐 빨간 불만 켜거든.' },
+      { who: '정우', text: '4시 25분, 고도 15도.' },
+    );
+    await wait(0.8);
+
+    // ④ 화재벨
+    flags.mkFire = true;
+    startFireBell();
+    await say(
+      '따르르르르릉—!!',
+      { who: '정우', text: '…화재벨?' },
+      { who: '정우', text: '도현이…!' },
+      '선배는 의자 위 알코올램프를 집어 뚜껑을 덮고는, 그대로 계단으로 뛰어갔다.',
+    );
+    await walkActor(jeongwoo, 20, 21.5, 0.9);
+    removeActor(jeongwoo);
+    // 음악실 선배들은 이미 뛰쳐나갔다
+    for (const a of actors.filter(a => a.floor === 'old2')) removeActor(a);
+    smoke = 'old1';
+    await say({ who: '민경', text: '선배, 같이 가요!' });
+  },
+
+  // ⑤ 1층 준비실 앞: 어긋난 기억 — 장면이 지지직거리며 두 가지로 겹친다
+  async mkDistort() {
+    if (flags.memory !== 'minkyung' || !flags.mkFire) return;
+    flags.mkDistort = true;
+    player.dir = 'right';
+    await say(
+      '복도에 매캐한 연기가 차 있다. 준비실 쪽에서 붉은빛이 일렁인다.',
+      '그때 나는 봤다.',
+    );
+    // 기억 A: 불붙은 램프를 들고 준비실 "안에서" 나오는 정우 (선생님이 믿는 장면)
+    const jeongwoo = addActor('jeongwoo86', 55.5, 16.6, 'down', 'old1');
+    startGlitch(0.5);
+    await say('준비실 문이 열리고— 불붙은 알코올램프를 든 정우 선배가 걸어 나왔다.');
+    // 기억 B: 계단 쪽에서 뚜껑 덮인 램프를 들고 달려오는 정우 — 두 장면이 번갈아 깜빡인다
+    for (let i = 0; i < 3; i++) {
+      startGlitch(0.35);
+      Object.assign(jeongwoo, { x: 46.5 * TILE, y: 18.4 * TILE, dir: 'right' });
+      await wait(0.35);
+      startGlitch(0.35);
+      Object.assign(jeongwoo, { x: 55.5 * TILE, y: 16.6 * TILE, dir: 'down' });
+      await wait(0.45);
+    }
+    await say(
+      '…아니.',
+      '계단 쪽에서 뛰어오던 선배의 램프는… 뚜껑이 덮여 있지 않았던가?',
+      '기억이 지지직거린다. 어느 쪽이었지?',
+    );
+
+    // 준비실에서 콜록거리며 나오는 도현, 정우의 한마디
+    const dohyun = addActor('dohyun86', 56.5, 16.6, 'down', 'old1');
+    await say(
+      { who: '도현', text: '콜록, 콜록…!' },
+      { who: '정우', text: '도현아! 괜찮아?' },
+      '도현 선배의 완장 끝이 검게 그을려 있다.',
+      { who: '정우', text: '(낮게) …넌 여기 없었던 거야. 가!' },
+      '그 말만, 이상하게 또렷이 들렸다.',
+    );
+    await walkActor(dohyun, 56.5, 18.6, 0.4);
+    await walkActor(dohyun, 46, 18.6, 1.2);
+    removeActor(dohyun);
+
+    // 복도 끝, 상자를 안은 어른의 그림자
+    const shadow = addActor('shadow', 44.5, 17.4, 'left', 'old1');
+    await say('복도 끝, 연기 너머로— 납작한 상자를 안은 어른의 그림자가 보였다.');
+    await walkActor(shadow, 40, 17.4, 1.0);
+    removeActor(shadow);
+    await say('그림자는 현관 쪽으로 사라졌다.', '…나는 그 얘기를, 기사에 쓰지 않았다.');
+    await SCRIPTS.mkReturn();
+  },
+
+  // ⑥ 현재로: 선생님의 기사 → 모순 → 선택 둘 (선생님에게 / 하율의 기사)
+  async mkReturn() {
+    stopFireBell();
+    startGlitch(1.2);
+    await wait(0.4);
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      endMemory();
+      // 빛찬·하율은 실험대 앞줄 오른쪽에 — 선생님이 나가는 길(왼쪽 문)을 막지 않게
+      setFloor(1, { x: 41.5, y: 12.6, dir: 'up' });
+      addActor('teacher', 39.5, 9, 'down', 1);
+      Object.assign(companion, { floor: 1, x: 43 * TILE, y: 12.6 * TILE, dir: 'up', visible: true, following: false });
+      r();
+    }));
+    await showChapter('2026년 11월 2일\n오후 5시 10분', 1.8);
+    await fadeInAsync();
+    await say(
+      '노을이 거의 다 졌다. 선생님은 한참 말이 없었다.',
+      { who: '오민경 선생님', text: '…그래서 썼어. "천문부 부장이 불붙은 램프를 들고 준비실에서 나왔다."' },
+      { who: '오민경 선생님', text: '그게 내가 본 거야. 적어도… 그렇게 기억해.' },
+      '그런데 이상하다. 선생님의 이야기 속에, 서로 맞지 않는 조각들이 있다.',
+    );
+    for (const c of Object.values(CONTRA)) {
+      c.found = true;
+      addEvidence(1);
+    }
+    Toast.show('수첩에 모순 4개를 적었다  (Tab)');
+    await say(
+      { who: ME, text: '(빨간 창문. 정우 선배는 "안전등"이라고 했어.)' },
+      { who: ME, text: '(아빠는 벨이 울릴 때까지 옥상에 있었는데… 어떻게 준비실 "안"에서 나와?)' },
+      { who: ME, text: '(그리고 "없었던 거야"라는 말. 그림자.)' },
+    );
+
+    // 선택: 선생님에게 (민경의 마음)
+    const kind = await choose(
+      ['선생님에게 뭐라고 할까?'],
+      ['"왜 사실대로 안 쓰셨어요?"', '"그날… 많이 무서우셨죠."'],
+    ) === 1;
+    if (kind) {
+      addHeart('minkyung', 2);
+      await say(
+        { who: '오민경 선생님', text: '…무서웠지. 열여섯 살이었으니까.' },
+        { who: '오민경 선생님', text: '그리고 40년 동안은… 내가 쓴 그 기사가 무서웠어.' },
+        '선생님은 처음으로 작게 웃었다.',
+        { who: '오민경 선생님', text: '고마워. 누가 그렇게 물어봐 주길 기다렸나 봐.' },
+        { who: '오민경 선생님', text: '…도현 선배. 지금 우리 학교 교장 선생님이야. 그분 기억은 또 다를 거야.' },
+      );
+    } else {
+      addHeart('minkyung', -1);
+      await say(
+        { who: '오민경 선생님', text: '…사실대로 썼다니까. 내가 본 대로.' },
+        '선생님은 창밖으로 고개를 돌렸다.',
+        { who: '오민경 선생님', text: '오늘은 여기까지 하자. 늦었어.' },
+      );
+    }
+    // 실험대 사이 통로 → 문 앞 → 문 밖 (꺾어서 걸어야 벽을 안 지난다)
+    const teacher = actors.find(a => a.floor === 1);
+    await walkActor(teacher, 39.5, 13.3, 0.6);
+    await walkActor(teacher, 36.5, 13.3, 0.5);
+    await walkActor(teacher, 36.5, 16.5, 0.5);
+    removeActor(teacher);
+
+    // 선택: 하율의 기사 (기사 값)
+    await say(
+      '선생님이 나가고, 과학실엔 둘만 남았다.',
+      { who: FRIEND, text: '빛찬아… 이거 진짜 엄청난 얘기야.' },
+      { who: FRIEND, text: '근데 선생님 기사엔 "램프 부주의"라고 돼 있잖아. 그게 진짜인지는 어떻게 알아?' },
+      { who: ME, text: '확인해 보면 되지. 여긴 과학실이니까.' },
+      { who: FRIEND, text: '오, 과학탐구부 부장님 등판?' },
+      { who: FRIEND, text: '잘 들어. 맞는 증거를 대면 기사의 신뢰도가 깎여. 바닥나면 반박하면 돼.' },
+      { who: FRIEND, text: '대신 엉뚱한 걸 들이밀면 네 머리만 아프다? 정신력 조심해.' },
+    );
+    // 첫 검증: 학보의 "램프 부주의" (experiment.js)
+    await SCRIPTS.expCombustion();
+    await say(
+      { who: FRIEND, text: '대박… 램프가 아니었어. 40년 동안 기사가 틀렸던 거야.' },
+      { who: FRIEND, text: '금요일이 학보 마감이거든. 이거, 40년 만의 정정 기사야.' },
+    );
+    const allow = await choose(
+      ['하율이 기자 수첩을 꼭 쥐고 있다. "이거… 기사로 써도 돼?"'],
+      ['"써도 돼."', '"조금만 기다려 줘."'],
+    ) === 0;
+    flags.articleOk = allow;
+    if (allow) {
+      addArticle(2);
+      await say(
+        { who: FRIEND, text: '진짜? 고마워! 특종이다…!' },
+        '하율의 눈이 반짝였다.',
+        '…괜찮은 걸까. 아직 다 밝혀진 것도 아닌데.',
+      );
+    } else {
+      await say(
+        { who: FRIEND, text: '…그래. 네 아빠 일이니까.' },
+        { who: FRIEND, text: '대신 약속해. 다 밝혀지면, 그때 제일 먼저 나한테 말하기.' },
+        { who: ME, text: '응. 약속.' },
+      );
+    }
+    flags.mkDone = true;
+    companion.following = true;
+    placeCompanionBehind();
+    await say({ who: FRIEND, text: '이도현 교장 선생님… 내일 찾아가 보자.' });
+  },
+
+  // 과학실 연소 실험 — 민경 회상 직후 첫 검증 (mkReturn), 개발자 메뉴에서도 바로 할 수 있다
   async expCombustion() {
     const run = storyRun;
     const won = await Experiment.start(EXPERIMENTS.combustion);
     alive(run);
     if (won && !BURN_CLUE.found) {
       BURN_CLUE.found = true;
+      addEvidence(1);
       Toast.show(`새 단서: ${BURN_CLUE.name}  (Tab)`, clueImage(BURN_CLUE.name));
     }
   },
@@ -641,6 +1164,13 @@ const SCRIPTS = {
     // 1장 마무리 단계에선 그게 최우선
     if (flags.ch1Ready && !flags.foundLog) {
       await say({ who: FRIEND, text: '준비실 서류함, 맨 아래 "천문부" 칸! 얼른 열어 보자.' });
+      return;
+    }
+    if (flags.mkDone) {
+      await say(
+        { who: FRIEND, text: '선생님 기억엔 구멍이 너무 많아. 빨간 창문, 램프, 그림자…' },
+        { who: FRIEND, text: '"넌 여기 없었던 거야." 그 말 들은 사람… 이도현 교장 선생님한테 직접 물어보자.' },
+      );
       return;
     }
     if (flags.ch2Started && !flags.ch2Intro) {
@@ -752,6 +1282,7 @@ function stopStory() {
   chapterEl.classList.remove('show');
   closeDialog();
   Experiment.abort();
+  stopFireBell();
   cutscene = false;
   Object.assign(fade, { alpha: 0, dir: 0, action: null, done: null });
   actors.length = 0;
@@ -797,6 +1328,8 @@ const DEV_STAGES = [
   ['1장 끝난 뒤', 'ch1done'],
   ['2장 시작 — 방과 후, 과학실로', 'ch2'],
   ['2장 — 오민경의 기억 들어가기', 'mk'],
+  ['2장 — 민경의 기억: 옥상 인터뷰', 'mkroof'],
+  ['2장 — 민경의 기억: 화재 뒤 1층', 'mkfire'],
 ];
 
 const findClue = name => { const c = CLUES.find(k => k.name === name); if (c) c.found = true; };
@@ -843,6 +1376,18 @@ function devStage(stage) {
       }
       return;
     }
+    if (stage === 'mkroof' || stage === 'mkfire') {
+      Object.assign(flags, { ch2Started: true, ch2Intro: true, mkSawNote: true, mkMusic: true });
+      if (stage === 'mkroof') {
+        beginMinkyungMemory('oldroof', { x: 20, y: 21, dir: 'up' });
+      } else {
+        Object.assign(flags, { mkRoof: true, mkFire: true, mkAsk: 'comet' });
+        beginMinkyungMemory('old1', { x: 44.5, y: 18.5, dir: 'right' });
+        smoke = 'old1';
+        startFireBell();
+      }
+      return;
+    }
     setFloor(1, { x: 60.5, y: 6, dir: 'up' });   // 준비실 서류함 앞
   }
 }
@@ -854,11 +1399,11 @@ function devMenuItems() {
     { id: 'stages', label: '이야기 단계로 이동 ▶' },
     { id: 'allClues', label: '단서 모두 얻기' },
     { id: 'noClues', label: '단서 모두 지우기' },
-    { id: 'expCombustion', label: '실험: 연소 실험 (1장 단서 지급)' },
+    { id: 'expCombustion', label: '실험: 연소 실험 (민경 회상 직후 단서)' },
     { id: 'noclip', label: `벽 통과: ${onOff(dev.noclip)}` },
     { id: 'fastText', label: `대사 빠르게: ${onOff(dev.fastText)}` },
     { id: 'fastMove', label: `빠르게 걷기: ${onOff(dev.fastMove)}` },
-    { id: 'info', label: `좌표·플래그 보기: ${onOff(dev.info)}` },
+    { id: 'info', label: `FPS·좌표·플래그 보기: ${onOff(dev.info)}` },
     { id: 'close', label: '닫기' },
   ];
 }
@@ -888,8 +1433,9 @@ function pickDev(id) {
     for (const c of CLUES) c.found = false;
     main(3, '단서를 모두 지웠다.');
   } else if (id === 'expCombustion') {
-    // 1장 끝난 상태로 맞추고 과학실에서 바로 실험 시작
+    // 민경 회상 직후 상태(1장 단서 + 모순 4개)로 맞추고 과학실에서 바로 실험 시작
     devStage('ch1done');
+    for (const c of Object.values(CONTRA)) c.found = true;
     setFloor(1, { x: 40.5, y: 9.5, dir: 'up' });
     DevMenu.close();
     runScript('expCombustion');
@@ -921,6 +1467,7 @@ if (devParams.get('stage')) {
   if (devParams.has('exp')) {
     CH1_KEYS.forEach(findClue);
     LOG_CLUE.found = true;
+    for (const c of Object.values(CONTRA)) c.found = true;
     runScript('expCombustion');
   }
 } else {

@@ -28,7 +28,8 @@ function pastCore(b, { up, down, roof }) {
   }
   b.obj('rail', 33, 25, 1, 7);
   if (up) b.warp(30, 30, 4, 2, { floor: PAST(n + 1), x: 36, y: 25, dir: 'up' });
-  if (roof) b.warp(30, 30, 4, 2, { floor: 'oldroof', x: 20, y: 21, dir: 'up' });
+  // 옥상 계단: 오민경의 기억에선 4시 전까지 잠겨 있다 (story.js 의 pastRoof)
+  if (roof) b.warps.push({ x: 30, y: 30, w: 4, h: 2, script: 'pastRoof' });
   if (down) {
     b.carve(34, 25, 4, 7, 'stairsDown');
     b.dec('arrowDown', 35, 24, 2, 1);
@@ -121,6 +122,8 @@ function buildPast1F() {
   b.obj('boxes', 61, 11);
   b.light(56.5, 4.5, 72, '255,40,30');
   b.light(52.5, 10.5, 30, '255,130,50');
+  // 오민경의 기억: 화재 뒤 준비실 앞 복도에 오면 어긋난 기억 장면
+  b.warps.push({ x: 48, y: 16, w: 14, h: 4, script: 'mkDistort', once: 'mkDistort' });
 
   // 중앙 현관
   b.room('중앙 현관', 2, 22, 12, 10, 'oldhall');
@@ -202,6 +205,9 @@ function buildPast2F() {
     b.obj('stool', sx, 27);
     b.obj('stool', sx, 29);
   }
+  b.obj('boombox', 14, 23, 2, 1, look('커다란 라디오 카세트 녹음기. 빨간 녹음 불이 깜빡인다.', '카운터 숫자가 천천히 올라가고 있다.'));
+  // 오민경의 기억: 음악실에 들어서면 관악부 선배들 장면
+  b.warps.push({ x: 2, y: 22, w: 26, h: 9, script: 'mkMusic', once: 'mkMusic' });
 
   pastBottomClassroom(b, '2학년 5반', 40);
 
@@ -258,7 +264,12 @@ function buildPastRoof() {
   b.warp(18, 23, 4, 1, { floor: 'old3', x: 32, y: 25, dir: 'up' });
   b.obj('dome', 4, 4, 6, 5, look('천문대. 둥근 지붕의 틈이 하늘을 향해 열려 있다.', '안쪽에서 낮게 모터 돌아가는 소리가 난다.'));
   b.obj('telescope', 22, 9, 1, 1, look('천문부 망원경. 동쪽 하늘을 겨누고 있다.'));
-  for (const sx of [20, 24, 26]) b.obj('stool', sx, 11);
+  b.obj('platecamera', 27, 9, 1, 1, look('원판 사진기. 삼각대 위에 나무 상자가 얹혀 있다.'));
+  b.obj('stool', 20, 11);
+  b.obj('lampstool', 24, 11, 1, 1, look('의자 위에서 알코올램프가 조용히 타고 있다.', '렌즈에 이슬이 맺히지 않게 켜 둔 거라고 했다.'));
+  b.obj('stool', 26, 11);
+  // 오민경의 기억: 옥상에 올라오면 인터뷰 장면
+  b.warps.push({ x: 2, y: 3, w: 36, h: 19, script: 'mkRoof', once: 'mkRoof' });
   b.light(7, 8.5, 22, '255,210,140');   // 천문대 문틈으로 새는 불빛
 
   return finishFloor(b);

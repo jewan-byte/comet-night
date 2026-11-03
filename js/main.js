@@ -62,7 +62,7 @@ function setPlayerLook(who) {
 const friendFrames = makePersonFrames(PEOPLE.friend.pal, PEOPLE.friend);
 
 let floor = FLOORS.home;
-const player = { x: 0, y: 0, dir: 'down', anim: 0, moving: false };
+const player = { x: 0, y: 0, dir: 'down', anim: 0, moving: false, scriptAnim: 0 };
 let cutscene = false;   // 컷신 중엔 움직이거나 조사할 수 없다 (대사 넘기기만 가능)
 
 // 동료(하율): floor 층에 visible 이면 보이고, following 이면 플레이어가 지나간 길을 따라온다
@@ -684,7 +684,9 @@ function draw() {
     const s = lit && lit.prop === p ? lit : null;
     drawables.push({ base: (p.y + p.h) * TILE, draw: () => (s ? drawLit(s, sx, sy) : g.drawImage(p.canvas, sx, sy)) });
   }
-  const frame = player.moving ? Math.floor(player.anim / FRAME_TIME) % 4 : 0;
+  // 컷신에서 걷게 할 땐 scriptAnim (story.js 의 walkActor)
+  const walkAnim = player.scriptAnim || (player.moving ? player.anim : 0);
+  const frame = walkAnim ? Math.floor(walkAnim / FRAME_TIME) % 4 : 0;
   drawables.push({ base: py, draw: () => g.drawImage(playerFrames[player.dir][frame], px - 8 - camX, py - 22 - camY) });
   for (const a of actors) {
     if (a.floor !== floor.map.n) continue;
@@ -702,6 +704,7 @@ function draw() {
   for (const d of drawables) d.draw();
   if (floor.map.night) {
     drawNight(camX, camY, px, py);
+    if (smoke === floor.map.n) drawSmoke();
   } else if (ambient) {
     for (const c of ambient) {
       g.fillStyle = c;
@@ -739,8 +742,10 @@ function draw() {
     const [tx, ty] = feetTile();
     const on = Object.entries(flags).filter(([, v]) => v).map(([k]) => k).join(' ');
     DebugInfo.set(
+      `FPS ${Math.round(fps)}  (프레임 ${(1000 / fps).toFixed(1)}ms)\n` +
       `${floor.map.label} [${floor.map.n}]  타일 ${tx},${ty}  ${currentRegion ? currentRegion.name : '-'}\n` +
       `단서 ${CLUES.filter(c => c.found).length}/${CLUES.length}  컷신 ${cutscene ? 'O' : 'X'}\n` +
+      `숨은 값: 증거 ${route.evidence} · 기사 ${route.article} · 마음 민경 ${route.heart.minkyung} 도현 ${route.heart.dohyun} 아빠 ${route.heart.dad}\n` +
       `플래그: ${on || '-'}`,
     );
   }
@@ -749,6 +754,15 @@ function draw() {
 // ── 시간대 색감: 밤이 아닌 장소에 덧칠할 색들 (예: 방과 후 노을), null 이면 없음 ──
 let ambient = null;
 const DUSK = ['rgba(255,120,40,0.22)', 'rgba(60,20,70,0.16)'];
+
+// ── 불이 난 층: 연기 + 일렁이는 붉은빛 (smoke = 그 층 이름, 없으면 null) ──
+let smoke = null;
+function drawSmoke() {
+  g.fillStyle = 'rgba(120,112,118,0.24)';
+  g.fillRect(0, 0, VIEW_W, VIEW_H);
+  g.fillStyle = `rgba(255,70,20,${0.05 + Math.abs(Math.sin(time * 5)) * 0.06})`;
+  g.fillRect(0, 0, VIEW_W, VIEW_H);
+}
 
 // ── 회상으로 넘어갈 때 지지직 ──
 let glitchUntil = 0;
@@ -818,8 +832,12 @@ function drawStars(camX, camY) {
 
 // ── 루프 ──
 let last = performance.now();
+// 초당 프레임 (개발자 메뉴 "좌표·플래그 보기"에 표시) — 튀지 않게 부드럽게 평균
+let fps = 60;
 function loop(now) {
-  const dt = Math.min((now - last) / 1000, 1 / 30);
+  const real = (now - last) / 1000;
+  if (real > 0) fps += (1 / real - fps) * 0.05;
+  const dt = Math.min(real, 1 / 30);
   last = now;
   Controls.update(dt);
   update(dt);

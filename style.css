@@ -1,4 +1,4 @@
-﻿html, body {
+html, body {
   margin: 0;
   height: 100%;
   background: #000;
@@ -364,113 +364,114 @@ body {
   overflow: hidden;
 }
 
-/* 과학실 실험 (언더테일 전투 화면) — 상자·그림은 캔버스, 글자만 여기 */
+/* 과학실 검증 — "실험 노트" 화면. 패널·그림은 캔버스(experiment.js), 글자만 여기 */
 #experiment {
   position: absolute;
   inset: 0;
   display: none;
   pointer-events: none;
+  color: #e8eef8;
 }
 #experiment.open { display: block; }
+#experiment.mini .ex-claim,
+#experiment.mini .ex-cred-lbl,
+#experiment.mini .ex-actions,
+#experiment.mini .ex-text { display: none; }
+
+/* 증언 카드 (종이 위 글씨) */
 #experiment .ex-claim {
   position: absolute;
-  top: calc(var(--s) * 6px);
-  width: 100%;
-  text-align: center;
-  font-size: calc(var(--s) * 9px);
-  color: #ffe066;
+  left: calc(var(--s) * 70px);
+  top: calc(var(--s) * 12px);
+  width: calc(var(--s) * 236px);
+  height: calc(var(--s) * 38px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #1d2230;
+}
+#experiment .ex-claim span {
+  font-size: calc(var(--s) * 8.5px);
+  line-height: 1.35;
 }
 #experiment .ex-claim small {
-  display: block;
-  font-size: calc(var(--s) * 6.5px);
-  color: #999;
+  align-self: flex-end;
+  font-size: calc(var(--s) * 5.5px);
+  color: #6a6458;
 }
-#experiment .ex-bubble {
+#experiment .ex-cred-lbl {
   position: absolute;
-  left: calc(var(--s) * 196px);
-  top: calc(var(--s) * 36px);
-  max-width: calc(var(--s) * 100px);
-  padding: calc(var(--s) * 3px) calc(var(--s) * 5px);
-  background: #fff;
-  color: #000;
-  font-size: calc(var(--s) * 7px);
-  line-height: 1.4;
-  border-radius: calc(var(--s) * 2px);
-  display: none;
+  left: calc(var(--s) * 64px);
+  top: calc(var(--s) * 55px);
+  font-size: calc(var(--s) * 6px);
+  color: #8fa6c8;
 }
-#experiment .ex-bubble.show { display: block; }
-#experiment .ex-bubble::before {
-  content: '';
+
+/* 행동 목록 (왼쪽 패널) */
+#experiment .ex-actions {
   position: absolute;
-  left: calc(var(--s) * -4px);
-  top: calc(var(--s) * 5px);
-  border: calc(var(--s) * 2px) solid transparent;
-  border-right-color: #fff;
+  left: calc(var(--s) * 8px);
+  top: calc(var(--s) * 82px);
+  width: calc(var(--s) * 76px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
+#experiment .ex-actions li {
+  height: calc(var(--s) * 29px);
+  line-height: calc(var(--s) * 24px);
+  padding-left: calc(var(--s) * 10px);
+  font-size: calc(var(--s) * 8.5px);
+  color: #6f84a6;
+}
+#experiment .ex-actions.active li,
+#experiment .ex-actions li.active { color: #c4d2ea; }
+#experiment .ex-actions li.sel.active { color: #ffffff; }
+#experiment .ex-actions li.ready { color: #ff8a8a; animation: blink 0.8s steps(1) infinite; }
+
+/* 작업 패널 (오른쪽): 대사, 단서 목록 */
 #experiment .ex-text {
   position: absolute;
-  left: calc(var(--s) * (var(--bx) + 10) * 1px);
-  top: calc(var(--s) * (var(--by) + 7) * 1px);
-  width: calc(var(--s) * (var(--bw) - 20) * 1px);
-  font-size: calc(var(--s) * 9px);
-  line-height: 1.5;
+  left: calc(var(--s) * 98px);
+  top: calc(var(--s) * 83px);
+  width: calc(var(--s) * 206px);
+  max-height: calc(var(--s) * 112px);
+  overflow: hidden;
+  font-size: calc(var(--s) * 8.5px);
+  line-height: 1.55;
   white-space: pre-wrap;
 }
 #experiment .ex-text b {
   display: block;
   font-weight: normal;
-  color: #ffe066;
-  font-size: calc(var(--s) * 7px);
+  color: #6fd3ff;
+  font-size: calc(var(--s) * 6.5px);
+  margin-bottom: calc(var(--s) * 2px);
 }
-#experiment .ex-text .sel { color: #ffe066; }
-#experiment .ex-text div { white-space: pre; font-size: calc(var(--s) * 8px); line-height: 1.4; }
-#experiment .ex-stats {
+#experiment .ex-text div {
+  white-space: pre;
+  font-size: calc(var(--s) * 7.5px);
+  line-height: 1.5;
+  color: #a8b8d4;
+}
+#experiment .ex-text div.sel { color: #ffffff; }
+#experiment .ex-text div.used { color: #56688a; }
+#experiment .ex-text div.sel.used { color: #a8b8d4; }
+
+/* 아래: 정신력, 조작 안내 */
+#experiment .ex-mind-lbl {
   position: absolute;
-  left: calc(var(--s) * 18px);
-  right: calc(var(--s) * 18px);
-  top: calc(var(--s) * 180px);
-  display: flex;
-  justify-content: space-between;
-  font-size: calc(var(--s) * 7px);
+  left: calc(var(--s) * 12px);
+  top: calc(var(--s) * 209px);
+  font-size: calc(var(--s) * 6.5px);
+  color: #ffb86a;
 }
-#experiment .ex-stats .lbl { color: #aaa; }
-#experiment .bar {
-  display: inline-block;
-  vertical-align: middle;
-  width: calc(var(--s) * 50px);
-  height: calc(var(--s) * 6px);
-  background: #6a1a1a;
-}
-#experiment .bar i { display: block; height: 100%; background: #ffe066; }
-#experiment .ex-cred .bar { width: calc(var(--s) * 70px); background: #333; }
-#experiment .ex-cred .bar i { background: #6fc3ff; }
-#experiment .ex-stats.low .ex-cred .lbl { color: #ff6a6a; }
-#experiment .ex-buttons {
-  position: absolute;
-  left: calc(var(--s) * 16px);
-  right: calc(var(--s) * 16px);
-  top: calc(var(--s) * 196px);
-  display: flex;
-  justify-content: space-between;
-}
-#experiment .ex-buttons span {
-  width: calc(var(--s) * 64px);
-  padding: calc(var(--s) * 3px) 0;
-  text-align: center;
-  font-size: calc(var(--s) * 9px);
-  color: #ff8c1a;
-  border: calc(var(--s) * 1.5px) solid #ff8c1a;
-}
-#experiment .ex-buttons span.sel { color: #ffe066; border-color: #ffe066; }
-#experiment .ex-buttons span.sel::before { content: '▶ '; }
-#experiment .ex-buttons span.ready { animation: blink 0.6s steps(1) infinite; color: #ffe066; }
 #experiment .ex-help {
   position: absolute;
-  bottom: calc(var(--s) * 3px);
-  width: 100%;
-  text-align: center;
+  right: calc(var(--s) * 10px);
+  top: calc(var(--s) * 210px);
   font-size: calc(var(--s) * 6px);
-  color: #888;
+  color: #6f84a6;
 }
 
 /* 태블릿 화면 조작 (조이스틱 + 버튼) */
