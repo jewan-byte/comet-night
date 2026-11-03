@@ -706,6 +706,16 @@ function draw() {
   if (floor.map.night) {
     drawNight(camX, camY, px, py);
     if (smoke === floor.map.n) drawSmoke();
+    // 엔딩 옥상: 고개를 들면 보이는 혜성 — 밤하늘 띠와 함께 화면 위쪽에 겹쳐 그린다
+    if (floor.map.night.comet) {
+      const sky = g.createLinearGradient(0, 0, 0, 90);
+      sky.addColorStop(0, 'rgba(8,12,34,0.95)');
+      sky.addColorStop(1, 'rgba(8,12,34,0)');
+      g.fillStyle = sky;
+      g.fillRect(0, 0, VIEW_W, 90);
+      for (let i = 0; i < 40; i++) rect(g, Math.floor(hash(i, 7, 51) * VIEW_W), Math.floor(hash(7, i, 52) * 60), 1, 1, hash(i, Math.floor(time * 2), 53) < 0.08 ? '#8a8aa0' : '#e8e8ff');
+      drawComet(250, 26);
+    }
   } else if (ambient) {
     for (const c of ambient) {
       g.fillStyle = c;
@@ -830,6 +840,18 @@ function drawStars(camX, camY) {
     const tw = hash(i, Math.floor(time * 2), 23) < 0.06 ? '#8a8aa0' : '#e8e8ff';
     rect(g, sx, sy, 1, 1, tw);
   }
+}
+
+// 40년 만에 돌아온 혜성 (하늘에 고정, 꼬리는 천천히 일렁인다)
+function drawComet(x, y) {
+  for (let i = 0; i < 70; i++) {
+    const a = 0.5 * (1 - i / 70);
+    const wob = Math.sin(time * 1.5 + i * 0.15) * (i / 70) * 2;
+    g.fillStyle = `rgba(170,200,255,${a})`;
+    g.fillRect(Math.round(x - i * 1.2), Math.round(y + i * 0.45 + wob), 1 + (i >> 4), 1 + (i >> 5));
+  }
+  rect(g, Math.round(x) - 1, Math.round(y) - 1, 3, 3, '#ffffff');
+  rect(g, Math.round(x) - 2, Math.round(y), 5, 1, 'rgba(255,255,255,0.6)');
 }
 
 // ── 루프 ──

@@ -208,6 +208,8 @@ function build1F() {
   // 건물 남쪽 외벽 + 현관 통로
   b.carve(1, 32, 62, 3, 'wall');
   b.carve(6, 32, 4, 3, 'hall');
+  // 넷째 날: 할 일을 마치고 현관을 나서면 집으로 (story.js 의 schoolExit)
+  b.warps.push({ x: 6, y: 33, w: 4, h: 2, script: 'schoolExit' });
   b.dec('plaque', 5, 32, 6, 1);
   for (const wx of [2, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47, 51, 55, 59]) b.dec('facadeWindow', wx, 33, 2, 2);
 
@@ -495,7 +497,7 @@ function buildHome() {
     ...clue('아빠의 사진', '장식장 위에 낡은 사진이 놓여 있다.', '망원경 옆에 선 고등학생들. 가운데서 웃고 있는 건… 아빠다.', '뒷면에 볼펜으로 적혀 있다. "1986. 3. 천문부 — 핼리 혜성 관측 전날"'),
     flag: 'sawPhoto',
   });
-  b.obj('bag', 29, 14, 1, 1, look('길쭉한 검은 가방. 아빠 거다.', '지퍼 위에 먼지가 수북하다. 오랫동안 열지 않은 것 같다.'));
+  b.obj('bag', 29, 14, 1, 1, { script: 'dadBag', prompt: '조사하기' });   // 넷째 날 저녁: 뜯긴 일지 장 (story.js)
   b.obj('plant', 14, 15);
 
   // 현관 (아래로 나가면 등교)
@@ -530,9 +532,21 @@ function buildBus() {
   return finishFloor(b);
 }
 
+// ── 2026년 옥상 (엔딩: 40년 만에 돌아온 혜성을 본다) ────────
+function buildRoof() {
+  const b = createFloor('roof26', 40, 26, { label: '옥상', style: 'roof', night: { dark: 0.62, sky: true, comet: true } });
+  b.room('옥상', 2, 3, 36, 19, 'roof');
+  b.carve(18, 22, 4, 2, 'stairsDown');
+  // 천문대가 있던 자리: 둥근 기초만 남았다
+  b.dec('scorch', 4, 4, 6, 4, look('둥글게 남은 콘크리트 자국. 1987년에 철거된 천문대 자리다.'));
+  b.obj('chain', 18, 21, 4, 1, look('쇠사슬. 오늘 밤만 풀려 있다.'));
+  b.light(20, 18, 30, '255,210,150');
+  return finishFloor(b);
+}
+
 function buildWorld() {
   // 1986년 학교 (회상 장면 무대)는 map1986.js
-  return { home: buildHome(), bus: buildBus(), 1: build1F(), 2: build2F(), 3: build3F(), ...buildPast() };
+  return { home: buildHome(), bus: buildBus(), 1: build1F(), 2: build2F(), 3: build3F(), roof26: buildRoof(), ...buildPast() };
 }
 
 // 바닥·벽·장식을 한 장의 큰 캔버스에 미리 그려둔다

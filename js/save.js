@@ -63,7 +63,12 @@ const Save = (() => {
 
     const memory = flags.memory;
     setPlayerLook(memory ? MEMORY_LOOK[memory] : null);
-    ambient = memory ? null : flags.day3 ? DUSK : flags.day2Evening ? EVENING : flags.ch2Started && !flags.day2 ? DUSK : null;
+    ambient = memory ? null
+      : flags.day4Evening ? EVENING
+        : flags.day4 ? null
+          : flags.day3 ? DUSK
+            : flags.day2Evening ? EVENING
+              : flags.ch2Started && !flags.day2 ? DUSK : null;
     const burning = (memory === 'minkyung' && flags.mkFire && !flags.mkDistort)
       || (memory === 'dohyun' && flags.dhFire && !flags.dhFought)
       || (memory === 'youngchul' && flags.ycSmoke);
@@ -76,7 +81,8 @@ const Save = (() => {
 
     if (flags.ch2Started && !flags.ch2Intro) addActor('teacher', 39.5, 9, 'down', 1);
     if (flags.day2 && !flags.day2Evening && !memory) addActor('principal', 57.5, 23.6, 'down', 1);
-    if (flags.day3 && !flags.ycDone && !memory) addActor('youngchul', 79.5, 43.5, 'down', 1);
+    if (flags.day3 && !flags.day4 && !flags.ycDone && !memory) addActor('youngchul', 79.5, 43.5, 'down', 1);
+    if (flags.day4 && !flags.day4Evening) addActor('principal', 57.5, 23.6, 'down', 1);
     if (memory === 'minkyung' && flags.mkMusic && !flags.mkFire) {
       addActor('band86', 12.5, 26, 'down', 'old2');
       addActor('band86', 16.5, 26, 'down', 'old2');

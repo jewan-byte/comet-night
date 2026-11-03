@@ -194,6 +194,92 @@ const MINIGAMES = {
     };
   })(),
 
+  // 위치 대조: 일지의 3/14 · 3/17 · 3/20 위치로 3/21 새벽 4:25 위치를 예측해 찍고, 원판 #12의 실제 위치를 겹친다
+  //   사흘에 한 칸씩 움직였으니, 하루면 그 1/3 쯤 — 살짝 휘는 길을 따라
+  orbit: (() => {
+    const W = 282, H = 142;
+    const PTS = [{ x: 58, y: 104, d: '3/14' }, { x: 112, y: 82, d: '3/17' }, { x: 162, y: 66, d: '3/20' }];
+    const ACTUAL = { x: 178, y: 61 };          // 원판 #12 에 찍힌 3/21 04:25 위치
+    const OK = 9;
+    const stars = Array.from({ length: 60 }, (_, i) => ({ x: Math.floor(hash(i, 4, 41) * W), y: Math.floor(hash(4, i, 42) * H) }));
+
+    return {
+      init: saved => saved || { cx: 140, cy: 40, phase: 'aim', t: 0 },
+
+      update(m, dt) {
+        m.t += dt;
+        if (m.phase === 'aim') {
+          const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+          const dy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
+          m.cx = Math.max(4, Math.min(W - 4, m.cx + dx * 50 * dt));
+          m.cy = Math.max(4, Math.min(H - 4, m.cy + dy * 50 * dt));
+          if (tapped.has('interact')) {
+            m.phase = 'overlay';
+            m.t = 0;
+            m.ok = Math.hypot(m.cx - ACTUAL.x, m.cy - ACTUAL.y) <= OK;
+            Sound.sfx(m.ok ? 'good' : 'bad');
+          }
+          return null;
+        }
+        if (m.t < 1.6) return null;
+        if (m.ok) {
+          return {
+            dmg: 50, solved: true,
+            pages: [
+              '예측한 점 위로 원판 #12를 겹쳤다. …흐릿한 혜성의 머리가, 정확히 그 자리에 내려앉는다.',
+              { who: ME, text: '3월 14일, 17일, 20일. 천문부는 이 혜성을 매일 쫓았어요. 그리고 21일 새벽, 예측한 자리에 그대로 있었어요.' },
+              { who: ME, text: '처음 알아보고 추적한 건 박사님이 아니라, 천문부였어요.' },
+              '강연장이 술렁였다!',
+            ],
+          };
+        }
+        return {
+          dmg: 0, miss: true, keep: { cx: m.cx, cy: m.cy, phase: 'aim', t: 0 },
+          pages: ['원판 #12의 혜성은 예측한 점과 어긋난 자리에 있다.', '사흘에 그만큼 움직였다면… 하루면 그 3분의 1쯤일 것이다. 길은 조금씩 휘어 있다.'],
+        };
+      },
+
+      draw(g, m, ox, oy, t) {
+        rect(g, ox, oy, W, H, '#0c1430');
+        for (const s of stars) rect(g, ox + s.x, oy + s.y, 1, 1, '#c8d0f0');
+        // 핼리 (참고)
+        rect(g, ox + 30, oy + 30, 3, 3, '#ffffff');
+        for (let i = 0; i < 14; i++) rect(g, ox + 26 - i, oy + 31 + (i >> 2), 1, 1, 'rgba(200,220,255,0.5)');
+        g.font = WORD_FONT;
+        g.textBaseline = 'middle';
+        // 일지의 기록 위치 + 날짜
+        PTS.forEach((p, i) => {
+          rect(g, ox + p.x - 2, oy + p.y - 2, 5, 5, '#ffb86a');
+          g.fillStyle = '#ffb86a';
+          g.fillText(p.d, ox + p.x - 10, oy + p.y + 10);
+          if (i) {
+            const q = PTS[i - 1];
+            for (let k = 0; k <= 10; k++) rect(g, Math.round(ox + q.x + (p.x - q.x) * k / 10), Math.round(oy + q.y + (p.y - q.y) * k / 10), 1, 1, 'rgba(255,184,106,0.6)');
+          }
+        });
+        // 예측 표시
+        const cx = Math.round(ox + m.cx), cy = Math.round(oy + m.cy);
+        rect(g, cx - 5, cy, 11, 1, '#6fd3ff');
+        rect(g, cx, cy - 5, 1, 11, '#6fd3ff');
+        g.fillStyle = '#6fd3ff';
+        g.fillText('3/21 04:25 ?', cx + 6, cy - 7);
+        if (m.phase === 'overlay') {
+          // 원판 #12 의 혜성이 서서히 겹쳐진다
+          g.save();
+          g.globalAlpha = Math.min(1, m.t / 1.2);
+          rect(g, ox + ACTUAL.x - 2, oy + ACTUAL.y - 2, 5, 5, '#ffffff');
+          for (let i = 0; i < 9; i++) rect(g, ox + ACTUAL.x + 3 + i, oy + ACTUAL.y + (i >> 2), 1, 1, 'rgba(220,230,255,0.7)');
+          g.fillStyle = m.ok ? '#ffe066' : '#ff8a8a';
+          g.fillText('원판 #12', ox + ACTUAL.x - 12, oy + ACTUAL.y + 12);
+          g.restore();
+        }
+        rect(g, ox + 6, oy + H - 16, W - 12, 12, 'rgba(0,0,0,0.6)');
+        g.fillStyle = '#e8eef8';
+        g.fillText(m.phase === 'aim' ? '일지의 세 위치로 3월 21일 새벽 4:25 위치를 예측해 F' : '원판 #12를 겹쳐 본다…', ox + 10, oy + H - 10);
+      },
+    };
+  })(),
+
   // 원판 현상: 40년 동안 현상되지 않은 원판 #12를 현상액에서 알맞은 순간에 꺼내고(타이밍),
   //   음화(밤하늘이 투명, 별이 검은 점)에서 핼리 말고 "또 하나의 혜성"을 찾아낸다
   plate: (() => {

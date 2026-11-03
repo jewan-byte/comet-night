@@ -93,6 +93,21 @@ function resetFlags() {
     plateStarted: false, // 임시 암실에서 현상 시작
     plateDone: false,    // 원판 #12 현상·판독 성공
     day3Done: false,     // 셋째 날 끝
+    // 넷째 날 · 목요일
+    day4: false,         // 11월 5일 점심, 신문부실에서 시작
+    draftDone: false,    // 하율의 전면 기사 원고: 발행/보류를 정함
+    publishScoop: false, // "내일 아침에 내자" → 엔딩 3 「특종」으로
+    d4Office: false,     // 교무실에서 교장 선생님께 금요일 이야기를 함
+    day4Evening: false,  // 넷째 날 저녁, 집
+    gotPages: false,     // 뜯긴 일지 장을 얻음
+    pagesFromDad: false, // 아빠가 직접 건네줌 (아니면 가방을 몰래 열다 들킴)
+    dadComes: false,     // 아빠가 금요일 강연장에 온다
+    // 다섯째 날 · 4장
+    day5: false,         // 11월 6일 금요일 (또는 특종 아침)
+    dadConfessed: false, // 강연 직전 아빠가 침묵의 이유를 말함
+    spottedNotch: false, // 강연 사진의 V자 흠과 "#9"를 알아봄
+    finalChoice: null,   // 'public' | 'private' | 'dad'
+    ending: 0,           // 1 이름을 되찾은 혜성 · 2 옥상의 세 사람 · 3 특종 · 4 묻어 둔 밤
   });
   smoke = null;
   stopFireBell();
@@ -266,6 +281,35 @@ const PLATE_CLUE = {
 };
 CLUES.push(CAMERA_CLUE, PLATE_CLUE);
 
+// 넷째 날: 아빠의 검은 가방 속 — 40년 전 뜯겨 나간 일지 마지막 장들
+const PAGES_CLUE = {
+  name: '뜯긴 일지 장',
+  text: [
+    '"3. 14 — 핼리 오른쪽 아래 이상한 별. 꼬리? 위치 기록."',
+    '"3. 17 — 그 별, 움직였다. 혜성이다! 위치 기록." "3. 20 — 또 움직임. 위치 기록. 박 선생님께 원판 현상 부탁드림."',
+    '"3. 21 새벽 — 4:20 도현, 준비실로 새 원판 가지러 감. 4:25 원판 12번, 고도 15도."',
+    '여백에 연필로 작게: "2061 — 같이 보자."',
+  ],
+  place: '집 · 아빠의 가방',
+  found: false,
+  story: true,
+};
+CLUES.push(PAGES_CLUE);
+
+// 다섯째 날: 강연장에 띄워진 "박영철의 첫 사진" — 알아본 경우에만
+const LECTURE_PHOTO = {
+  name: '강연 사진: "첫 사진"',
+  text: [
+    '박영철 박사가 "1986년 3월 22일, 내가 찍은 첫 사진"이라며 띄운 원판 사진.',
+    '모서리에 V자 흠. 그리고 귀퉁이에 긁어 쓴 "#9".',
+    '깨진 돌기가 남기는 흠 — 천문부 홀더로 찍은 원판이다. 지난주 천문부가 찍은 9번 원판.',
+  ],
+  place: '체육관 · 귀환 기념 강연',
+  found: false,
+  story: true,
+};
+CLUES.push(LECTURE_PHOTO);
+
 // ── 과학실 실험 (experiment.js) — 주장마다 대사와 단서 반응 ──
 // 페이지 형식은 대사창과 같다. clues: 단서 이름 → { dmg: 깎는 신뢰도, text, unlock: 실험 기준이 생김 }
 //   목록에 없는 단서나 dmg ≤ 0 인 단서를 내밀면 빛찬의 정신력이 깎인다
@@ -429,6 +473,73 @@ const EXPERIMENTS = {
     ],
   },
 
+  // 다섯째 날, 체육관 강연장 — 마지막 검증
+  orbit: {
+    title: '위치 대조',
+    mini: 'orbit',
+    miniHelp: 'WASD : 예측 위치 옮기기  ·  F : 원판 #12 겹치기',
+    portrait: 'youngchul',
+    prop: 'paper',
+    speaker: '박영철 박사',
+    claim: '"그 혜성을 처음 알아보고 추적한 건 나다. 학생들은 아무것도 몰랐다."',
+    source: '— 박영철 박사, 귀환 기념 강연 (2026년 11월 6일)',
+    intro: [
+      '체육관의 모든 눈이 빛찬에게 쏠렸다.',
+      { who: '박영철', text: '학생. 원판 한 장에 뭔가 찍혔다고 발견이 되는 게 아니야. 날짜를, 추적을 증명할 수 있나?' },
+    ],
+    observe: [
+      ['주장을 되새긴다.', '"처음 알아보고 추적한 건 나다." — 알아본 날짜, 그리고 그 뒤를 쫓은 기록.'],
+      ['혜성은 별 사이를 조금씩 움직인다. 날짜별 위치가 있으면, 다음 위치를 예측할 수 있다.', '예측이 실제 사진과 맞는다면— 그건 추적했다는 증거다.'],
+      ['아빠의 뜯긴 일지 장. 3/14, 3/17, 3/20의 위치.', '그리고 3/21 새벽 4:25에 찍힌 원판 #12. ([단서 제시] → [실험])'],
+    ],
+    clues: {
+      '뜯긴 일지 장': {
+        dmg: 15, unlock: true,
+        text: [
+          '뜯긴 일지 장을 높이 들었다.',
+          { who: ME, text: '3월 14일 "이상한 별", 17일 "혜성이다!", 20일 "또 움직임". 날짜마다 위치가 적혀 있어요.' },
+          '이제 [실험]으로 위치를 대조할 수 있다!',
+        ],
+      },
+      '원판 #12': {
+        dmg: 15,
+        text: [{ who: ME, text: '천문부 원판 #12. 3월 21일 새벽 4시 25분. 박사님의 "3월 22일"보다 하루 먼저 찍혔어요.' }],
+      },
+      '강연 사진: "첫 사진"': {
+        dmg: 15,
+        text: [
+          { who: ME, text: '방금 띄우신 "첫 사진"의 모서리, V자 흠이요. 천문부 홀더의 깨진 돌기가 남긴 흔적이에요.' },
+          { who: ME, text: '그리고 귀퉁이의 "#9". 그건 박사님 원판이 아니라 천문부의 9번 원판이에요.' },
+        ],
+      },
+      '증언: 암실의 박영철': {
+        dmg: 15,
+        text: [{ who: ME, text: '3월 21일 새벽, 박사님은 암실에서 천문부 원판 봉투를 가방에 넣고 계셨어요. 본 사람이 있어요.' }],
+      },
+      '모순: 3월 22일의 발견': {
+        dmg: 10,
+        text: [{ who: ME, text: '"22일에 처음"이라고 하셨죠. 그 꼬리는 21일 새벽 쟁반 속에 이미 있었어요.' }],
+      },
+      '1986년 학보': {
+        dmg: -5,
+        text: ['학보를 내밀었다.', '…"천문부 부주의". 객석에서 수군거리는 소리가 났다.'],
+      },
+    },
+    wrongClue: name => [`「${name}」을(를) 내밀었다.`, '…객석이 웅성거린다. 이 주장과는 상관없다.'],
+    noTarget: ['대조할 기록이 없다.', '날짜별 위치… 아빠의 일지 장. ([단서 제시])'],
+    expDone: ['이미 대조했다.'],
+    notYet: ['아직이다. 박사는 증거 없는 말에는 웃기만 할 것이다.'],
+    broken: ['"내가 처음 알아보고 추적했다"는 주장이 무너졌다.', '지금이라면… [반박]할 수 있다!'],
+    taunts: ['학생, 여긴 과학 강연장이야.', '그 낙서 같은 종이가 증거라고?', '천문학은 기록으로 말하는 거네.'],
+    tauntsWeak: ['…그 일지가, 아직 남아 있었나.', '정우… 그 녀석이…'],
+    win: [
+      { who: ME, text: '천문부는 3월 14일에 이 혜성을 처음 알아봤고, 매일 쫓았어요. 21일 새벽엔 예측한 자리에서 다시 찍었고요.' },
+      { who: ME, text: '박사님은 그 원판을 가져가 22일에 "발견"하셨어요.' },
+      '박영철 박사의 손에서 리모컨이 미끄러졌다.',
+      '주장 「처음 알아보고 추적한 건 나다」를 반박했다!',
+    ],
+  },
+
   // 셋째 날, 과학준비실(임시 암실) — 박영철의 "발견"
   plate: {
     title: '원판 현상',
@@ -575,6 +686,34 @@ function setupDay2(at = DAY2_START) {
   if (!actors.some(a => a.who === 'principal')) addActor('principal', 57.5, 23.6, 'down', 1);
 }
 
+// 다섯째 날 저녁 7시, 체육관 강연장: 무대엔 박영철, 객석엔 학생들과 (온다면) 아빠·교장·민경 선생님
+const LECTURE = ['rgba(10,14,40,0.32)'];
+function setupLecture() {
+  ambient = LECTURE;
+  actors.length = 0;
+  companion.visible = true;
+  companion.following = false;
+  setFloor(1, { x: 79.5, y: 52.5, dir: 'up' });
+  Object.assign(companion, { floor: 1, x: 81 * TILE, y: 52.6 * TILE, dir: 'up' });
+  addActor('youngchul', 79.5, 43.2, 'down', 1);
+  for (const [who, x, y] of [['student1', 73.5, 48], ['student2', 76.5, 48], ['student3', 82.5, 48], ['student1', 85.5, 48], ['student3', 74.5, 50.5], ['student2', 84.5, 50.5]]) {
+    addActor(who, x, y, 'up', 1);
+  }
+  if (flags.dadComes) addActor('dad', 77.5, 52.6, 'up', 1);
+  if (flags.dohyunTestify) addActor('principal', 88.5, 48, 'up', 1);
+  if (route.heart.minkyung >= 1) addActor('teacher', 70.5, 48, 'up', 1);
+}
+
+// 넷째 날 점심: 하율과 함께 (기본은 3층 신문부실), 교무실엔 교장 선생님
+function setupDay4(at = { x: 22.5, y: 27.5, dir: 'up' }, where = 3) {
+  ambient = null;
+  actors.length = 0;
+  companion.visible = true;
+  companion.following = true;
+  setFloor(where, at);
+  addActor('principal', 57.5, 23.6, 'down', 1);
+}
+
 // 셋째 날 방과 후: 노을, 하율과 함께, 체육관 무대 앞엔 (인터뷰가 끝나기 전까지) 박영철 박사
 const DAY3_START = { x: 20.5, y: 37.5, dir: 'right' };
 function setupDay3(at = DAY3_START) {
@@ -653,8 +792,15 @@ function statusLines() {
     return [{ text: '박영철의 기억 — 그가 말하는 그날 밤' }, { text: now }];
   }
   if (isPast(here)) return [{ text: '1986년 3월 21일 새벽 — 기억 속' }];
-  if (flags.day3) {
-    if (flags.day3Done) doing = '목요일로 (다음 이야기 준비 중)';
+  if (flags.day5) {
+    doing = '금요일 밤';
+  } else if (flags.day4Evening) {
+    doing = flags.gotPages ? '내일은 금요일' : '아빠의 검은 가방';
+  } else if (flags.day4) {
+    if (!flags.draftDone) doing = '신문부실에서 하율의 원고 읽기';
+    else doing = flags.d4Office ? '현관으로 나가 집으로' : '교무실에 들르기 (선택) · 현관을 나서면 집으로';
+  } else if (flags.day3) {
+    if (flags.day3Done) doing = '목요일로';
     else if (flags.plateStarted || CAMERA_CLUE.found) doing = '과학준비실 임시 암실에서 원판 #12 현상하기';
     else if (flags.ycDone) doing = flags.articleOk ? '체육관 무대 옆 전시함의 사진기 되찾기' : '과학탐구부실 구석 상자에서 옛 사진기 찾기';
     else doing = '체육관에서 박영철 박사 인터뷰';
@@ -1771,6 +1917,8 @@ const SCRIPTS = {
 
   // 교무실 들어서기: 둘째 날 처음엔 교장 장면, 테이프를 찾아 다시 오면 소리 분석
   async office() {
+    if (flags.day4 && !flags.day4Evening && !flags.d4Office) return SCRIPTS.d4Office();
+    if (flags.day4) return;
     if (flags.day2 && !flags.dhIntro) return SCRIPTS.dhIntro();
     if (flags.dhDone && !flags.dhSound && hasClue('카세트테이프')) return SCRIPTS.dhSound();
   },
@@ -2130,6 +2278,493 @@ const SCRIPTS = {
       { who: ME, text: '…아빠 일지. 뜯겨 나간 마지막 장들. 거기에 혜성 위치가 적혀 있었을 거야.' },
     );
     flags.day3Done = true;
+    await SCRIPTS.day4Start();
+  },
+
+  // ── 넷째 날 · 목요일 ──
+
+  // 11월 5일 점심, 신문부실: 하율의 전면 기사 원고 — 내일 아침에 낼까 (엔딩 3의 갈림길)
+  async day4Start() {
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    await showChapter('2026년 11월 5일 목요일\n점심시간', 2.2);
+    flags.day4 = true;
+    setupDay4({ x: 22.5, y: 27.5, dir: 'up' });
+    await fadeInAsync();
+    const eager = route.article >= 3;
+    await say(
+      '신문부실. 하율이 출력한 원고를 책상에 내려놓았다.',
+      '「40년 전 그날 밤 — 박영철 박사가 숨긴 것」',
+      '실명. 원판을 가방에 넣던 장면. 그리고 이도현 교장을 장학금으로 협박한 이야기까지.',
+      { who: FRIEND, text: '교장 선생님 고백, 나도 옆에서 다 들었잖아. 녹음 시각, 원판 #12, 전부 넣었어.' },
+      eager
+        ? { who: FRIEND, text: '빛찬아, 내일 아침에 내자. 강연 전에 터뜨려야 해. 지금 아니면 저 사람이 또 무대에서 웃는다고!' }
+        : { who: FRIEND, text: '…근데 이걸 내일 아침에 내면, 교장 선생님 장학금 얘기까지 다 퍼지겠지. 너는 어떻게 생각해?' },
+    );
+    const publish = await choose(
+      ['원고를 내려다본다. 교장 선생님의 이름이, 장학금이라는 단어가 눈에 걸린다.'],
+      ['"내일 아침에 내자."', '"…금요일 밤까지만 기다려 줘."'],
+    ) === 0;
+    flags.draftDone = true;
+    flags.publishScoop = publish;
+    if (publish) {
+      addArticle(2);
+      await say(
+        { who: FRIEND, text: '좋아. 부장님한테 바로 넘길게. 내일 아침 1교시 전에 쫙 깔릴 거야.' },
+        '하율은 신이 나 있었다. …빛찬은 원고 맨 아래, "이도현(현 교장)"이라는 글자를 오래 보았다.',
+      );
+    } else if (eager) {
+      await say(
+        { who: FRIEND, text: '……하.' },
+        { who: FRIEND, text: '알았어. 대신 금요일 밤에도 아무것도 못 하면, 그땐 내 맘대로 낸다?' },
+        { who: ME, text: '응. 약속해.' },
+      );
+    } else {
+      await say(
+        { who: FRIEND, text: '…그래. 나도 그게 맞는 것 같아. 이건 우리 기사이기 전에, 너네 아빠랑 교장 선생님 얘기니까.' },
+        { who: FRIEND, text: '금요일 밤, 다 끝나면— 그때 제대로 쓸게.' },
+      );
+    }
+    await say(
+      { who: FRIEND, text: '교장 선생님한테도 내일 일 말씀드려야 하지 않을까? 교무실 들렀다가 가자.' },
+      { who: ME, text: '(…수업 끝나면 집에 가서, 아빠 가방부터.)' },
+    );
+  },
+
+  // 넷째 날 교무실: 금요일 강연에 와 달라고 (도현의 마음을 되찾을 마지막 기회)
+  async d4Office() {
+    flags.d4Office = true;
+    player.dir = 'up';
+    await say(
+      '교장 선생님은 창가에 서서 운동장 쪽 체육관을 내려다보고 있었다.',
+      { who: '교장 선생님', text: '…내일이구나.' },
+    );
+    const sincere = await choose(
+      ['교장 선생님에게 뭐라고 할까?'],
+      ['"내일 강연에 와 주세요. 이번엔 같이 서 주세요."', '"와 주실 거죠? 아빠한테 빚지셨잖아요."'],
+    ) === 0;
+    if (sincere) {
+      if (!flags.dohyunTestify) addHeart('dohyun', 2);
+      if (route.heart.dohyun >= 2) flags.dohyunTestify = true;
+      await say(
+        { who: '교장 선생님', text: '……같이, 라.' },
+        { who: '교장 선생님', text: '40년 전엔 정우가 혼자 섰지. 이번엔— 그래. 가마.' },
+      );
+    } else {
+      if (!flags.dohyunTestify) addHeart('dohyun', -1);
+      await say(
+        { who: '교장 선생님', text: '…빚이라.' },
+        flags.dohyunTestify
+          ? { who: '교장 선생님', text: '그래, 맞는 말이다. 갚으러 가마.' }
+          : { who: '교장 선생님', text: '그 빚을 어떻게 갚아야 할지, 나는 아직 모르겠구나.' },
+      );
+    }
+  },
+
+  // 넷째 날: 현관을 나서면 집으로 (원고를 정한 뒤)
+  async schoolExit() {
+    if (!flags.day4 || !flags.draftDone || flags.day4Evening) return;
+    await SCRIPTS.day4Evening();
+  },
+
+  // 넷째 날 저녁, 집: 아빠의 마음이 충분하면 아빠가 직접, 아니면 가방을 몰래 열다 들킨다
+  async day4Evening() {
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    await showChapter('그날 저녁', 1.8);
+    flags.day4Evening = true;
+    actors.length = 0;
+    companion.visible = false;
+    companion.following = false;
+    ambient = EVENING;
+    setFloor('home', { x: 21.5, y: 10, dir: 'up' });
+    await fadeInAsync();
+    if (route.heart.dad >= 2) {
+      flags.pagesFromDad = true;
+      await say(
+        '식탁 위에 누렇게 바랜 종이 몇 장이 놓여 있었다. 아빠는 그 앞에 앉아 있었다.',
+        { who: '아빠', text: '…네가 찾던 거다.' },
+        '뜯겨 나간 관측일지의 마지막 장들. 반듯한 글씨. 아빠의 열여덟 살 글씨.',
+        { who: '아빠', text: '그날 밤, 내가 뜯었다. 왜 그랬는지는… 내일 얘기하마. 약속했으니까.' },
+      );
+      await SCRIPTS.gotPages();
+      flags.dadComes = true;
+      await say(
+        { who: '아빠', text: '내일, 강연장에 가마.' },
+        { who: '아빠', text: '40년 동안 TV로만 본 얼굴을, 이번엔 직접 보러.' },
+      );
+    } else {
+      await say(
+        '아빠는 식탁에 엎드려 졸고 있다. 거실이 조용하다.',
+        '거실 구석, 길쭉한 검은 가방. 지퍼 위에 먼지가 수북하다.',
+        '…저 안에, 뜯겨 나간 장이 있을지도 모른다.',
+      );
+      return;
+    }
+    await SCRIPTS.day5Start();
+  },
+
+  // 아빠의 검은 가방
+  async dadBag() {
+    if (!flags.day4Evening || flags.gotPages) {
+      await say('길쭉한 검은 가방. 아빠 거다.', flags.gotPages ? '…지퍼가 반쯤 열려 있다.' : '지퍼 위에 먼지가 수북하다. 오랫동안 열지 않은 것 같다.');
+      return;
+    }
+    await say(
+      '지퍼를 열었다. 오래된 망원경 접안렌즈, 성도 한 장.',
+      '그리고 비닐에 싸인 종이 몇 장. 관측일지와 같은 종이, 같은 글씨.',
+    );
+    await SCRIPTS.gotPages();
+    // 몰래 연 걸 들킨다
+    addHeart('dad', -1);
+    player.dir = 'left';
+    await say(
+      '부스럭. 식탁 쪽에서 의자 끄는 소리가 났다.',
+      { who: '아빠', text: '…그건.' },
+      '아빠는 잠이 덜 깬 얼굴로, 한참 동안 빛찬의 손에 들린 종이를 보았다.',
+      { who: ME, text: '…미안해. 근데 알아야 했어.' },
+      { who: '아빠', text: '……' },
+    );
+    flags.dadComes = route.heart.dad >= 2;
+    await say(flags.dadComes
+      ? { who: '아빠', text: '…내일, 강연장에 가마. 거기서 다 얘기하자.' }
+      : { who: '아빠', text: '내일… 생각해 보마.' });
+    await SCRIPTS.day5Start();
+  },
+
+  async gotPages() {
+    flags.gotPages = true;
+    PAGES_CLUE.found = true;
+    addEvidence(1);
+    Toast.show(`새 단서: ${PAGES_CLUE.name}  (Tab)`);
+    await say(
+      '"3. 14 — 핼리 오른쪽 아래 이상한 별. 꼬리?" "3. 17 — 움직였다. 혜성이다!" "3. 20 — 또 움직임."',
+      '날마다 위치가 적혀 있다. 천문부는 그 혜성을 일주일 동안 쫓고 있었다.',
+      '그리고 3월 21일 새벽. "4:20 도현, 준비실로 새 원판 가지러 감."',
+      { who: ME, text: '(…도현 선생님이 준비실에 있었다는 기록. 그래서 아빠는 이 장을—)' },
+      '여백에 연필로 작게 적혀 있다. "2061 — 같이 보자."',
+    );
+  },
+
+  // ── 다섯째 날 · 4장 「아빠」 ──
+
+  async day5Start() {
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    flags.day5 = true;
+    if (flags.publishScoop) return SCRIPTS.endingScoop();
+    await showChapter('4장  아빠', 2.6);
+    await showChapter('2026년 11월 6일 금요일\n오후 7시', 2.2);
+    setupLecture();
+    await fadeInAsync();
+    await say(
+      '체육관은 사람들로 가득 찼다. 학생, 선생님, 동네 사람들, 방송국 카메라까지.',
+      '무대 위 현수막. "박영철 혜성 귀환 기념 특별 강연".',
+    );
+    // 아빠가 왔다면: 강연 직전, 40년 동안 침묵한 이유
+    if (flags.dadComes) {
+      await say(
+        '맨 뒷줄, 낯익은 외투. 아빠가 빛찬의 옆자리에 와 앉았다.',
+        { who: '아빠', text: '…약속했지. 다 얘기하겠다고.' },
+        { who: '아빠', text: '그날 밤, 뜯긴 장엔 "도현이가 준비실에 갔다"는 기록이 있었어. 그래서 뜯었다. 도현이를 지키려고.' },
+        { who: '아빠', text: '박 선생님이 원판을 가져간 건 몰랐어. 1987년, 신문에서 "박영철 혜성"을 보고서야 알았지.' },
+        { who: '아빠', text: '그걸 밝히려면, 이 장을 내밀어야 했어. 그럼 도현이가 그날 밤 거기 있었다는 것도 드러나고.' },
+        { who: '아빠', text: '…그래서 입을 다물었다. 40년을.' },
+        { who: ME, text: '그럼 지금은, 왜?' },
+        { who: '아빠', text: '도현이가 먼저 말했다며. 그리고— 2061년까지 기다릴 수는 없잖아.' },
+      );
+      flags.dadConfessed = true;
+    }
+    if (flags.dohyunTestify) await say('객석 옆쪽, 이도현 교장 선생님이 굳은 얼굴로 무대를 보고 있다. 눈이 마주치자 짧게 고개를 끄덕였다.');
+    if (route.heart.minkyung >= 1) await say('교사석에는 오민경 선생님도 있다. 무릎 위에, 누렇게 바랜 학보 한 부.');
+
+    // 강연 → "첫 사진" 영사
+    await say(
+      { who: '박영철', text: '40년 전 오늘, 나는 이 학교의 신임 교사였습니다.' },
+      { who: '박영철', text: '그리고 1986년 3월 22일 밤— 바로 이 사진에서, 새로운 혜성을 발견했지요.' },
+      '조명이 꺼지고, 스크린에 흑백 원판 사진이 크게 떠올랐다. 객석에서 탄성이 터졌다.',
+    );
+    const spot = await choose(
+      ['스크린 속 원판 사진. …어딘가 낯이 익다. 무엇이 눈에 걸리지?'],
+      ['핼리 옆의 흐릿한 꼬리', '모서리의 V자 흠과 "#9"', '사진 아래의 서명'],
+    );
+    if (spot === 1) {
+      flags.spottedNotch = true;
+      LECTURE_PHOTO.found = true;
+      addEvidence(1);
+      Toast.show(`새 단서: ${LECTURE_PHOTO.name}  (Tab)`);
+      await say(
+        '모서리의 V자 흠. 천문부 사진기의 깨진 돌기가 남기는 바로 그 흠이다.',
+        '그리고 귀퉁이에 긁어 쓴 "#9".',
+        { who: ME, text: '(…천문부 원판이야. 지난주에 찍은 9번 원판. 박사님 사진이 아니야.)' },
+      );
+    } else {
+      await say('…뭔가 걸리는데, 그게 뭔지 모르겠다. 사진은 금세 다음 장면으로 넘어갔다.');
+    }
+
+    // 마지막 선택
+    const options = ['손을 들어 반박한다', '강연이 끝난 뒤 따로 찾아간다'];
+    if (flags.dadComes) options.push('아빠에게 맡긴다');
+    const pick = await choose(['박사가 다음 슬라이드를 넘긴다. 지금이다. 어떻게 할까?'], options);
+    flags.finalChoice = ['public', 'private', 'dad'][pick];
+    if (pick === 0) return SCRIPTS.finalPublic();
+    if (pick === 1) return SCRIPTS.finalPrivate();
+    return SCRIPTS.finalDad();
+  },
+
+  // 공개 반박: 마지막 검증 → "현상은 내가 했다" → 증인들이 차례로 선다
+  async finalPublic() {
+    await say('빛찬은 자리에서 일어나 손을 들었다.', { who: '박영철', text: '…질문인가, 학생?' }, { who: ME, text: '그 사진, 박사님이 찍은 게 아니에요.' });
+    const run = storyRun;
+    await Experiment.start(EXPERIMENTS.orbit);
+    alive(run);
+    addEvidence(1);
+    await say(
+      { who: '박영철', text: '…그래, 아이들이 찍었다 치자. 하지만 현상한 건 나야! 그 꼬리를 알아본 것도, 계산한 것도!' },
+    );
+    let support = 0;
+    if (flags.dohyunTestify) {
+      support++;
+      await say(
+        '객석 옆에서 의자가 끄는 소리가 났다. 이도현 교장 선생님이 일어섰다.',
+        { who: '교장 선생님', text: '1986년 3월 21일 새벽 4시 20분. 저는 그 암실에 있었습니다.' },
+        { who: '교장 선생님', text: '박 선생님은 천문부 원판 봉투를 가방에 넣고 계셨고, 제 장학금을 들어 입을 막으셨습니다.' },
+        { who: '교장 선생님', text: '그리고 저는 40년 동안, 그 대가를 친구에게 떠넘겼습니다.' },
+      );
+    }
+    if (route.heart.minkyung >= 2) {
+      support++;
+      await say(
+        '교사석에서 오민경 선생님이 누렇게 바랜 학보를 들고 일어섰다.',
+        { who: '오민경 선생님', text: '"천문부 부장의 램프 부주의." 제가 1학년 때 쓴 기사입니다. 틀렸습니다.' },
+        { who: '오민경 선생님', text: '40년 늦었지만, 이 자리에서 정정합니다.' },
+      );
+    }
+    if (flags.dadComes) {
+      support++;
+      await say(
+        '맨 뒷줄에서 아빠가 천천히 일어섰다. 체육관이 조용해졌다.',
+        { who: '아빠', text: '천문부 부장, 한정우입니다.' },
+        { who: '아빠', text: '선생님. 그 혜성, 우리가 일주일 동안 쫓았습니다. 매일 밤, 옥상에서.' },
+        { who: '아빠', text: '이름은 됐습니다. 다만— 그 일주일이 있었다는 것만은, 돌려받고 싶습니다.' },
+      );
+    }
+    if (support === 0) return SCRIPTS.endingBuried('public');
+    return SCRIPTS.endingName();
+  },
+
+  // 따로 만남: 무대 뒤에서 같은 자료로 무엇을 바로잡을지 협상한다
+  async finalPrivate() {
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      actors.length = 0;
+      setFloor(1, { x: 88.5, y: 43.5, dir: 'up' });
+      addActor('youngchul', 88.5, 41.9, 'down', 1);
+      r();
+    }));
+    await fadeInAsync();
+    await say(
+      '강연이 끝난 뒤, 무대 옆 전시함 앞. 박사는 혼자 사진기를 내려다보고 있었다.',
+      { who: ME, text: '박사님. 이거 보여 드리고 싶어서요.' },
+      '원판 #12, 뜯긴 일지 장, 녹음테이프. 하나씩 전시함 위에 올려놓았다.',
+      { who: '박영철', text: '……' },
+      { who: '박영철', text: '…정우의 아들이었군. 처음부터 그 얼굴이었어.' },
+      { who: '박영철', text: '원하는 게 뭔가. 발견자 명단에 자네 아버지 이름을 올려 주지. 조용히. 정정 보고서로.' },
+    );
+    const quiet = await choose(
+      ['박사가 조건을 내건다. 조용히 바로잡자고.'],
+      ['"…좋아요. 대신 도현 선생님 일도 바로잡아 주세요."', '"아니요. 그날 밤 일을 모두 앞에서 말해 주세요."'],
+    ) === 0;
+    if (!quiet) {
+      await say(
+        { who: '박영철', text: '…그건 못 하네. 40년을 쌓은 이름이야.' },
+        '박사는 끝내 고개를 저었다.',
+      );
+      return SCRIPTS.endingBuried('private');
+    }
+    await say(
+      { who: '박영철', text: '…이도현 일은, 내가 협박한 게 맞다. 그것도 보고서에 쓰지.' },
+      '박사는 오래 사진기를 쓰다듬다가, 천천히 고개를 끄덕였다.',
+    );
+    const reconcile = route.heart.dad >= 2 && (flags.dohyunTestify || route.heart.dohyun >= 2);
+    return reconcile ? SCRIPTS.endingRoof() : SCRIPTS.endingBuried('private');
+  },
+
+  // 아빠에게 맡김: 아빠의 마음이 충분하면 아빠가 일어선다
+  async finalDad() {
+    await say('빛찬은 아빠를 보았다. 아빠도 빛찬을 보았다.');
+    if (route.heart.dad < 3) {
+      await say(
+        '아빠의 손이 무릎 위에서 떨렸다.',
+        { who: '아빠', text: '……미안하다.' },
+        '아빠는 끝내 일어서지 못했다. 강연은 박수 속에 끝났다.',
+      );
+      return SCRIPTS.endingBuried('dad');
+    }
+    await say(
+      '아빠가 빛찬의 손에서 일지 장을 받아 들고, 천천히 일어섰다.',
+      { who: '아빠', text: '박 선생님. 천문부 부장, 한정우입니다.' },
+      { who: '박영철', text: '…정우?' },
+      { who: '아빠', text: '그 혜성, 우리가 일주일 동안 쫓았습니다. 여기 기록이 있습니다. 그리고 그날 새벽의 원판도.' },
+      '빛찬은 원판 #12를 높이 들었다. 스크린의 "첫 사진"과 같은 V자 흠이, 객석에도 보였다.',
+    );
+    if (route.evidence >= 10 && flags.dohyunTestify) {
+      await say(
+        '이도현 교장 선생님이 아빠 옆에 나란히 섰다.',
+        { who: '교장 선생님', text: '그날 밤 암실엔 박 선생님이 계셨습니다. 제가 봤습니다.' },
+      );
+      return SCRIPTS.endingName();
+    }
+    return SCRIPTS.endingRoof();
+  },
+
+  // ── 엔딩 ──
+
+  // 엔딩 1 「이름을 되찾은 혜성」
+  async endingName() {
+    flags.ending = 1;
+    await say(
+      '체육관이 웅성거림으로 가득 찼다. 박사는 한참 동안 스크린을 올려다보다가, 마이크를 내려놓았다.',
+      { who: '박영철', text: '……정정하겠습니다.' },
+      '그날 밤 보고서는, 한 달 뒤 국제천문연맹에 제출됐다.',
+      '"공동 발견자 — 동사란고등학교 천문부 (한정우, 이도현)."',
+    );
+    await SCRIPTS.roofScene(1);
+  },
+
+  // 엔딩 2 「옥상의 세 사람」
+  async endingRoof() {
+    flags.ending = 2;
+    await say(
+      '세상은 아직 모른다. 박사의 정정 보고서는 조용히, 아주 조용히 발송될 것이다.',
+      '하지만 오늘 밤, 알아야 할 사람들은 다 알게 됐다.',
+    );
+    await SCRIPTS.roofScene(2);
+  },
+
+  // 옥상: 40년 만에 돌아온 혜성 (엔딩 1·2)
+  async roofScene(n) {
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      actors.length = 0;
+      ambient = null;
+      companion.visible = n === 1;
+      companion.following = false;
+      setFloor('roof26', { x: 20.5, y: 14.5, dir: 'up' });
+      Object.assign(companion, { floor: 'roof26', x: 22.5 * TILE, y: 14.6 * TILE, dir: 'up' });
+      addActor('dad', 18.5, 13.6, 'up', 'roof26');
+      addActor('principal', 16.5, 13.6, 'up', 'roof26');
+      if (n === 1 && route.heart.minkyung >= 1) addActor('teacher', 24.5, 13.6, 'up', 'roof26');
+      r();
+    }));
+    await showChapter('그날 밤, 옥상', 1.8);
+    await fadeInAsync();
+    await say(
+      '교장 선생님이 40년 만에 옥상의 쇠사슬을 풀었다.',
+      '동쪽 하늘. 희뿌연 머리, 길게 늘어진 꼬리.',
+      { who: ME, text: '…저게.' },
+      { who: '아빠', text: '그래. 우리 혜성이다.' },
+      { who: '교장 선생님', text: '…정우야. 미안하다. 그리고, 고맙다.' },
+      { who: '아빠', text: '됐어, 도현아. 같이 보자. 이번엔 끝까지.' },
+    );
+    if (n === 1) {
+      await say(
+        { who: FRIEND, text: '(작게) 빛찬아. 이제 써도 되지? 40년 만의 정정 기사.' },
+        { who: ME, text: '응. 제일 먼저, 약속했잖아.' },
+      );
+    }
+    await SCRIPTS.finish(n);
+  },
+
+  // 엔딩 3 「특종」: 금요일 아침, 하율의 기사가 먼저 터진다
+  async endingScoop() {
+    flags.ending = 3;
+    await showChapter('2026년 11월 6일 금요일\n아침', 2.2);
+    ambient = null;
+    actors.length = 0;
+    companion.visible = true;
+    companion.following = true;
+    setFloor(3, { x: 22.5, y: 27.5, dir: 'up' });
+    await fadeInAsync();
+    await say(
+      '1교시가 시작되기도 전에, 학보 특별판이 학교를 뒤덮었다.',
+      '「40년 전 그날 밤 — 박영철 박사가 숨긴 것」',
+      '점심 무렵엔 인터넷 뉴스에 올랐다. 저녁 무렵, 강연 취소 공지가 났다. 박사 측은 변호사를 통해 "명예훼손"이라는 입장을 냈다.',
+      '그리고 기사 맨 아래의 한 줄. "이도현(현 교장)은 당시 장학금을 잃을까 침묵했다."',
+      '교장 선생님은 그날 오후 교육청에 불려 갔다.',
+      { who: FRIEND, text: '…빛찬아. 나 잘한 걸까.' },
+      { who: ME, text: '……' },
+      { who: FRIEND, text: '진실은 다 썼어. 근데 왜 이렇게, 아무도 안 웃지.' },
+    );
+    await showChapter('그날 밤', 1.6);
+    await say(
+      '신문부실 창가. 동쪽 하늘에 혜성이 떠 있다. 누구의 이름도 붙지 않은 것처럼.',
+      { who: FRIEND, text: '…다음엔, 사람부터 볼게.' },
+    );
+    await SCRIPTS.finish(3);
+  },
+
+  // 엔딩 4 「묻어 둔 밤」: 강연은 그대로 끝났다. 그날 밤 집에서, 아빠가 이야기를 시작한다
+  async endingBuried(how) {
+    flags.ending = 4;
+    if (how === 'public') {
+      await say(
+        '…아무도 일어서지 않았다.',
+        { who: '박영철', text: '학생, 상상력은 좋은데. 증언할 사람 하나 없는 이야기는 이야기일 뿐이야.' },
+        '객석에서 웃음이 번졌다. 강연은 박수 속에 끝났다.',
+      );
+    }
+    await new Promise(r => fadeTo(() => {
+      fade.dir = 0;
+      actors.length = 0;
+      companion.visible = false;
+      companion.following = false;
+      ambient = EVENING;
+      setFloor('home', { x: 21.5, y: 10, dir: 'up' });
+      r();
+    }));
+    await showChapter('그날 밤, 집', 1.8);
+    await fadeInAsync();
+    await say(
+      '식탁에 아빠와 마주 앉았다. 창밖으로 희미한 혜성이 보였다.',
+      { who: '아빠', text: '…그날 밤 얘기를 해 주마. 처음부터.' },
+      { who: '아빠', text: '세상은 안 바뀌어도 돼. 너만 알면 돼.' },
+      '아빠의 이야기는 새벽까지 이어졌다. 옥상, 핼리, 도현이, 원판 12번.',
+    );
+    if (route.heart.minkyung >= 1) await say('…다음 주 월요일 학보엔, 짧은 정정 기사가 실렸다. "1986년 4월호 화재 기사 — 램프 부주의 아님." 기자 이름은 오민경.');
+    await SCRIPTS.finish(4);
+  },
+
+  // 엔딩 카드 → (조건이 맞으면) 숨은 장면 「2061」 → 타이틀로
+  async finish(n) {
+    const NAMES = { 1: '이름을 되찾은 혜성', 2: '옥상의 세 사람', 3: '특종', 4: '묻어 둔 밤' };
+    await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    await showChapter(`엔딩 ${n}\n「${NAMES[n]}」`, 3.2);
+    // 숨은 장면: 1986년 옥상에서 정우가 한 약속 — "2061년엔 내 애랑 같이 보려고" (핼리, 76년 주기)
+    if (flags.saw2061 && n !== 3) {
+      await showChapter('2061년 7월', 2.2);
+      setFloor('roof26', { x: 20.5, y: 14.5, dir: 'up' });
+      actors.length = 0;
+      ambient = null;
+      companion.visible = false;
+      addActor('dad', 18.5, 13.6, 'up', 'roof26');
+      await fadeInAsync();
+      const warm = route.heart.dad >= 2;
+      await say(
+        '35년 뒤, 같은 옥상.',
+        { who: '아빠', text: '…봐라. 76년 만이다. 핼리.' },
+        { who: ME, text: '아빠가 열여덟 살 때 본 거.' },
+        { who: '아빠', text: '그날 옥상에서 그랬지. 다음엔 내 애랑 같이 보겠다고.' },
+        warm ? { who: '아빠', text: '……지켰다.' } : { who: '아빠', text: '…늦었지만, 지켰구나.' },
+        { who: ME, text: '응. 지켰어.' },
+      );
+      await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
+    }
+    await showChapter('혜성이 지나간 밤\n\n— 끝 —', 3);
+    await showChapter('만든 사람: jewan-byte\n함께 만든 AI: Claude × Codex\n\n플레이해 줘서 고마워요.', 3.5);
+    // 처음 화면으로 (저장은 지운다)
+    Save.clear();
+    stopStory();
+    resetFlags();
+    for (const c of CLUES) c.found = false;
+    startStory(true);
   },
 
   // 과학실 연소 실험 — 민경 회상 직후 첫 검증 (mkReturn), 개발자 메뉴에서도 바로 할 수 있다
@@ -2149,6 +2784,12 @@ const SCRIPTS = {
     // 1장 마무리 단계에선 그게 최우선
     if (flags.ch1Ready && !flags.foundLog) {
       await say({ who: FRIEND, text: '준비실 서류함, 맨 아래 "천문부" 칸! 얼른 열어 보자.' });
+      return;
+    }
+    if (flags.day4) {
+      if (!flags.draftDone) await say({ who: FRIEND, text: '원고 좀 봐 줘. 내일 아침에 낼지 말지, 너랑 정하고 싶어.' });
+      else if (!flags.d4Office) await say({ who: FRIEND, text: '교무실 들렀다 갈래? 교장 선생님한테 내일 일 말씀드리자. 아니면 바로 현관으로.' });
+      else await say({ who: FRIEND, text: '오늘은 집에 가서 쉬어. 내일… 같이 서 있을게.' });
       return;
     }
     if (flags.day3) {
@@ -2354,6 +2995,9 @@ const DEV_STAGES = [
   ['2장 — 소리 분석 (교무실, 테이프 있음)', 'dhsound'],
   ['3장 셋째 날 — 체육관 박영철', 'd3'],
   ['3장 — 원판 현상 (사진기 있음, 준비실 앞)', 'd3plate'],
+  ['넷째 날 — 신문부실 원고', 'd4'],
+  ['4장 금요일 — 마음 높음 (엔딩 1·2 시험)', 'd5'],
+  ['4장 금요일 — 마음 낮음 (엔딩 4 시험)', 'd5low'],
 ];
 
 const findClue = name => { const c = CLUES.find(k => k.name === name); if (c) c.found = true; };
@@ -2413,6 +3057,34 @@ function devStage(stage) {
         flags.dhIntro = true;
         runScript('enterDohyun');
       }
+      return;
+    }
+    if (stage === 'd4' || stage === 'd5' || stage === 'd5low') {
+      // 셋째 날까지 모두 끝낸 상태 (원판 #12 현상 완료)
+      Object.assign(flags, {
+        ch2Started: true, ch2Intro: true, mkSawNote: true, mkMusic: true, mkRoof: true, mkAsk: 'why', saw2061: true,
+        mkFire: true, mkDistort: true, mkDone: true, day2: true, dhIntro: true, dhBandDown: true, dhBandUp: true,
+        dhGotPlates: true, dhFire: true, dhFought: true, dhDone: true, dhSound: true, day2Evening: true, day2Done: true,
+        day3: true, ycIntro: true, ycSmoke: true, ycRescue: true, ycDone: true, plateStarted: true, plateDone: true, day3Done: true,
+      });
+      for (const c of [...Object.values(CONTRA), ...Object.values(CONTRA_DH), ...Object.values(CONTRA_YC)]) c.found = true;
+      BURN_CLUE.found = TESTIMONY.found = CAMERA_CLUE.found = PLATE_CLUE.found = true;
+      findClue('카세트테이프');
+      route.evidence = 12;
+      if (stage === 'd4') {
+        setupDay4();
+        runScript('day4Start');
+        return;
+      }
+      const high = stage === 'd5';
+      Object.assign(route.heart, high ? { minkyung: 2, dohyun: 4, dad: 3 } : { minkyung: 0, dohyun: 0, dad: 1 });
+      Object.assign(flags, {
+        day4: true, draftDone: true, d4Office: true, day4Evening: true, gotPages: true,
+        pagesFromDad: high, dadComes: high, dohyunTestify: high,
+      });
+      PAGES_CLUE.found = true;
+      setupDay4();
+      runScript('day5Start');
       return;
     }
     if (stage === 'd3' || stage === 'd3plate') {
