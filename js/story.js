@@ -1259,6 +1259,21 @@ async function startStory(withTitle) {
   try {
     if (withTitle) await showTitle();
     if (run !== storyRun) return;
+    // 저장된 기록이 있으면 이어하기 (save.js)
+    const saved = withTitle && Save.load();
+    if (saved) {
+      const when = new Date(saved.savedAt);
+      const cont = await choose(
+        [`저장된 기록이 있다. (${when.getMonth() + 1}월 ${when.getDate()}일 ${when.getHours()}시 ${String(when.getMinutes()).padStart(2, '0')}분)`],
+        ['이어하기', '처음부터'],
+      ) === 0;
+      if (cont) {
+        Save.restore(saved);
+        await fadeInAsync();
+        return;
+      }
+      Save.clear();
+    }
     await SCRIPTS.wakeUp();
     currentRegion = null;   // 타이틀 뒤에 가려져 못 본 "내 방" 이름을 눈뜬 뒤에 다시 띄운다
   } catch (e) {

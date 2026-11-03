@@ -480,6 +480,7 @@ function pickMenu(id) {
 
 // 처음 상태로: 단서 초기화 후 프롤로그(집에서 눈뜨기)부터
 function resetGame() {
+  Save.clear();
   for (const c of CLUES) c.found = false;
   restartStory();
 }
