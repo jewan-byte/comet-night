@@ -755,6 +755,7 @@ function draw() {
 // ── 시간대 색감: 밤이 아닌 장소에 덧칠할 색들 (예: 방과 후 노을), null 이면 없음 ──
 let ambient = null;
 const DUSK = ['rgba(255,120,40,0.22)', 'rgba(60,20,70,0.16)'];
+const EVENING = ['rgba(18,26,72,0.4)', 'rgba(255,200,120,0.06)'];   // 저녁 집: 푸른 어둠 + 형광등
 
 // ── 불이 난 층: 연기 + 일렁이는 붉은빛 (smoke = 그 층 이름, 없으면 null) ──
 let smoke = null;

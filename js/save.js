@@ -63,7 +63,7 @@ const Save = (() => {
 
     const memory = flags.memory;
     setPlayerLook(memory ? MEMORY_LOOK[memory] : null);
-    ambient = flags.ch2Started && !memory && !flags.day2 ? DUSK : null;
+    ambient = memory ? null : flags.day2Evening ? EVENING : flags.ch2Started && !flags.day2 ? DUSK : null;
     const burning = (memory === 'minkyung' && flags.mkFire && !flags.mkDistort)
       || (memory === 'dohyun' && flags.dhFire && !flags.dhFought);
     if (burning) smoke = 'old1';

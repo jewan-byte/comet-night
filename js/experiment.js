@@ -193,6 +193,151 @@ const MINIGAMES = {
       },
     };
   })(),
+
+  // 소리 분석: 1986년 관악부 녹음테이프의 파형을 훑어 네 순간을 찾고, 시간 간격을 따진다
+  //   카운터 000 = 3시 55분, 1칸 = 5초. 화면에는 4시 15분(240)~4시 40분(540)만 보인다.
+  sound: (() => {
+    const W = 282, H = 142;
+    const C0 = 240, C1 = 540;                          // 보이는 카운터 범위
+    const WAVE = { x: 10, y: 50, w: 262, h: 54 };
+    const EVENTS = [
+      { id: 'down', c: 348, len: 10, amp: 0.55, label: '"어, 도현 선배! 이 시간에 어디 가요?" "쉿. 금방 올라가."' },
+      { id: 'up', c: 396, len: 10, amp: 0.5, label: '"선배, 1층에 박 선생님 계시죠?" …"응, 암실에."' },
+      { id: 'bang', c: 432, len: 3, amp: 1, label: '펑— (바닥 너머로 둔탁하게 울리는 소리)' },
+      { id: 'bell', c: 456, len: 60, amp: 0.85, label: '따르르르릉— (화재벨. 연주가 뚝 끊긴다)' },
+    ];
+    const QUIZ = {
+      q: '도현 선배가 계단을 올라간 뒤, 몇 분 뒤에 "펑"이 났을까?',
+      options: ['곧바로 (0분)', '3분 뒤', '7분 뒤'],
+      answer: 1,
+    };
+    const time = c => {
+      const sec = 55 * 60 + c * 5, m = Math.floor(sec / 60);
+      return `${3 + Math.floor(m / 60)}시 ${String(m % 60).padStart(2, '0')}분`;
+    };
+    const xOf = c => WAVE.x + (c - C0) / (C1 - C0) * WAVE.w;
+    const eventAt = c => EVENTS.find(e => c >= e.c - 3 && c <= e.c + e.len + 3);
+    // 파형 높이: 합주 소리(잔잔) + 사건들(튀어나옴)
+    const amp = c => {
+      const e = EVENTS.find(v => c >= v.c && c <= v.c + v.len);
+      const band = c >= 456 ? 0.05 : 0.18 + hash(c, 3, 14) * 0.14;   // 벨 뒤엔 연주가 끊긴다
+      return e ? Math.max(band, e.amp * (0.7 + hash(c, 5, 15) * 0.3)) : band;
+    };
+
+    return {
+      init: saved => saved || { c: 300, found: new Set(), heard: null, phase: 'scan', pick: 0, t: 0 },
+
+      update(m, dt) {
+        m.t += dt;
+        if (m.phase === 'scan') {
+          const dx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+          m.c = Math.max(C0, Math.min(C1, m.c + dx * 60 * dt * (keys.has('run') ? 2.5 : 1)));
+          if (tapped.has('interact')) {
+            const e = eventAt(m.c);
+            m.heard = e ? e.label : '…합주 소리뿐이다.';
+            m.heardAt = m.c;
+            if (e && !m.found.has(e.id)) {
+              m.found.add(e.id);
+              Sound.sfx('good');
+            } else {
+              Sound.sfx('move');
+            }
+            if (m.found.size === EVENTS.length) {
+              m.phase = 'quiz';
+              m.t = 0;
+            }
+          }
+          return null;
+        }
+        // 질문: 고르고 F
+        const d = (tapped.has('down') || tapped.has('right') ? 1 : 0) - (tapped.has('up') || tapped.has('left') ? 1 : 0);
+        if (d) {
+          m.pick = (m.pick + d + QUIZ.options.length) % QUIZ.options.length;
+          Sound.sfx('move');
+        }
+        if (m.t > 0.3 && tapped.has('interact')) {
+          if (m.pick === QUIZ.answer) {
+            return {
+              dmg: 50, solved: true,
+              pages: [
+                '4시 24분, 내려가는 인사. 4시 28분, 올라오는 대답 — "응, 암실에."',
+                '그리고 4시 31분, 펑. 4시 33분, 화재벨.',
+                { who: ME, text: '선생님은 불이 나기 3분 전에 이미 준비실을 나와 계단을 오르고 있었어요.' },
+                { who: ME, text: '그리고 "암실에" 누가 있었는지… 직접 대답하셨어요.' },
+                '증언의 신뢰도가 크게 무너졌다!',
+              ],
+            };
+          }
+          return {
+            dmg: 0, miss: true, keep: m,
+            pages: ['…다시 계산해 보자. 올라오는 대답은 몇 분이었고, "펑"은 몇 분이었지?'],
+          };
+        }
+        return null;
+      },
+
+      draw(g, m, ox, oy, t) {
+        // 카세트 데크
+        rect(g, ox, oy, W, H, '#1c1c22');
+        rect(g, ox + 8, oy + 6, 120, 30, '#2a2a32');
+        rect(g, ox + 12, oy + 10, 112, 22, '#e8e2cc');
+        rect(g, ox + 14, oy + 12, 108, 5, '#4a6ac8');                        // 라벨: 86.3.21 새벽 합주
+        ring(g, ox + 40, oy + 25, 4, '#3a3a44');
+        ring(g, ox + 96, oy + 25, 4, '#3a3a44');
+        rect(g, ox + 44, oy + 23, 48, 4, '#6a4a30');
+        // 카운터 · 시각
+        g.font = WORD_FONT;
+        g.textBaseline = 'middle';
+        g.fillStyle = '#ff9a4a';
+        g.fillText(`카운터 ${String(Math.round(m.c)).padStart(3, '0')}`, ox + 140, oy + 15);
+        g.fillStyle = '#e8eef8';
+        g.fillText(`≈ ${time(Math.round(m.c))}`, ox + 140, oy + 29);
+        // 찾은 것
+        g.fillStyle = '#8fa6c8';
+        g.fillText(`찾은 순간 ${m.found.size} / ${EVENTS.length}`, ox + 210, oy + 15);
+
+        // 파형
+        rect(g, ox + WAVE.x - 2, oy + WAVE.y - 2, WAVE.w + 4, WAVE.h + 4, '#0e1420');
+        const mid = oy + WAVE.y + WAVE.h / 2;
+        for (let px = 0; px < WAVE.w; px++) {
+          const c = C0 + px / WAVE.w * (C1 - C0);
+          const a = amp(Math.floor(c)) * (WAVE.h / 2 - 2);
+          const e = EVENTS.find(v => c >= v.c && c <= v.c + v.len);
+          rect(g, ox + WAVE.x + px, Math.round(mid - a), 1, Math.max(1, Math.round(a * 2)),
+            e && m.found.has(e.id) ? '#ffe066' : '#5fdc7a');
+        }
+        // 시각 눈금 (5분마다)
+        for (let c = C0; c <= C1; c += 60) {
+          const x = Math.round(ox + xOf(c));
+          rect(g, x, oy + WAVE.y + WAVE.h + 3, 1, 3, '#6f84a6');
+          g.fillStyle = '#6f84a6';
+          g.fillText(time(c).replace('시 ', ':').replace('분', ''), x - 10, oy + WAVE.y + WAVE.h + 12);
+        }
+        // 재생 위치
+        const hx = Math.round(ox + xOf(m.c));
+        rect(g, hx, oy + WAVE.y - 6, 1, WAVE.h + 12, '#ff6a6a');
+        rect(g, hx - 2, oy + WAVE.y - 8, 5, 3, '#ff6a6a');
+
+        // 들은 내용 / 질문 (두 줄)
+        rect(g, ox + 6, oy + 112, W - 12, 28, '#0e1420');
+        g.fillStyle = '#e8eef8';
+        if (m.phase === 'quiz') {
+          g.fillText(QUIZ.q, ox + 10, oy + 119);
+          QUIZ.options.forEach((o, i) => {
+            g.fillStyle = i === m.pick ? '#ffe066' : '#8fa6c8';
+            g.fillText((i === m.pick ? '▸ ' : '  ') + o, ox + 10 + i * 88, oy + 132);
+          });
+        } else if (m.heard) {
+          const LINE = 27;
+          g.fillText(m.heard.slice(0, LINE), ox + 10, oy + 119);
+          if (m.heard.length > LINE) g.fillText(m.heard.slice(LINE), ox + 10, oy + 132);
+        } else {
+          g.fillStyle = '#6f84a6';
+          g.fillText('파형에서 튀어나온 소리를 찾아 F로 들어 보자.', ox + 10, oy + 125);
+        }
+      },
+    };
+  })(),
 };
 
 const Experiment = (() => {
@@ -225,7 +370,7 @@ const Experiment = (() => {
       mode: 'text', menu: 0, clueIndex: 0, observed: 0, wrongs: 0,
       knowsTarget: false, solved: false, used: new Set(), once: new Set(),
       pages: [], page: 0, shown: 0, after: null,
-      shake: 0, flash: 0, hurt: 0, mini: null,
+      shake: 0, flash: 0, hurt: 0, mini: null, miniSaved: null,
     };
   }
 
@@ -307,7 +452,8 @@ const Experiment = (() => {
       else if (!st.knowsTarget) say(d.noTarget, toMenu);
       else {
         st.mode = 'mini';
-        st.mini = MINIGAMES[d.mini].init();
+        st.mini = MINIGAMES[d.mini].init(st.miniSaved);   // 틀려도 진행을 이어 가는 미니게임은 상태를 맡겨 둔다
+        st.miniSaved = null;
         st.mini.tableTried = st.once.has('table');
       }
     } else if (st.cred > 0) {                          // 반박 — 아직 이르다
@@ -381,6 +527,7 @@ const Experiment = (() => {
           st.once.add(res.once);
         }
         if (res.solved) st.solved = true;
+        if (res.keep) st.miniSaved = res.keep;
         st.mini = null;
         if (res.miss) miss(res.pages);
         else hit(res.dmg, res.pages);
@@ -428,7 +575,7 @@ const Experiment = (() => {
       text: 'F : 넘기기',
       menu: 'W/S : 고르기  ·  F : 선택',
       clues: 'W/S : 고르기  ·  F : 제시  ·  Esc : 뒤로',
-      mini: `${st.data.title} — A/D : 이동  ·  W/S : 높이  ·  F : 불 붙이기`,
+      mini: `${st.data.title} — ${st.data.miniHelp}`,
     }[st.mode]);
   }
 

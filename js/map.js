@@ -200,8 +200,8 @@ function build1F() {
   b.obj('plant', 54, 22);
   b.obj('cabinet', 60, 22, 2, 1, clue('잠긴 서랍', '서류함.', '"학생 지도 기록" 서랍만 잠겨 있다.'));
   for (const [tx, ty] of [[55, 24], [59, 24], [55, 27], [59, 27]]) b.obj('tdesk', tx, ty, 2, 2);
-  // 2장 둘째 날: 교무실에 들어서면 이도현 교장 장면 (story.js — 그 전엔 아무 일 없다)
-  b.warps.push({ x: 54, y: 22, w: 8, h: 9, script: 'dhIntro', once: 'dhIntro' });
+  // 2장 둘째 날: 교무실에 들어서면 이도현 교장 장면 / 테이프를 들고 오면 소리 분석 (story.js 의 office)
+  b.warps.push({ x: 54, y: 22, w: 8, h: 9, script: 'office' });
 
   // 건물 남쪽 외벽 + 현관 통로
   b.carve(1, 32, 62, 3, 'wall');

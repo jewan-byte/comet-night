@@ -1095,6 +1095,14 @@ const PEOPLE = {
     },
     glasses: true,
   },
+  // 1986년의 박영철: 신임 과학 교사, 둥근 안경, 갈색 재킷
+  youngchul86: {
+    pal: {
+      ...PLAYER_PAL, hair: '#2a2016', hairHi: '#44362a', blazer: '#6a4a30', blazerDk: '#523822',
+      shirt: '#e8e2d4', tie: '#2a3a5a', pants: '#3a3430', pantsDk: '#2e2824',
+    },
+    glasses: true,
+  },
   // 1986년 관악부 선배
   band86: {
     pal: { ...PLAYER_PAL, hair: '#2a1e18', hairHi: '#44342a', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#8a2a30' },
