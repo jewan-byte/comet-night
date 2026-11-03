@@ -2811,7 +2811,7 @@ const SCRIPTS = {
       await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
     }
     await showChapter('혜성이 지나간 밤\n\n— 끝 —', 3);
-    await showChapter('만든 사람: jewan-byte\n함께 만든 AI: Claude × Codex\n\n플레이해 줘서 고마워요.', 3.5);
+    await showChapter('제작자: 사람', 3.5);
     // 처음 화면으로 (저장은 지운다)
     Save.clear();
     stopStory();
