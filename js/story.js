@@ -693,15 +693,17 @@ function setupLecture() {
   actors.length = 0;
   companion.visible = true;
   companion.following = false;
-  setFloor(1, { x: 79.5, y: 52.5, dir: 'up' });
-  Object.assign(companion, { floor: 1, x: 81 * TILE, y: 52.6 * TILE, dir: 'up' });
+  setFloor(1, { x: 79.5, y: 50.5, dir: 'up' });
+  // 무대(박영철)와 객석(빛찬)이 한 화면에 — 대사창은 아래, 그 위로 무대부터 빛찬 줄까지
+  camFocus = { x: 79.5 * TILE, y: 48.5 * TILE };
+  Object.assign(companion, { floor: 1, x: 81 * TILE, y: 50.6 * TILE, dir: 'up' });
   addActor('youngchul', 79.5, 43.2, 'down', 1);
-  for (const [who, x, y] of [['student1', 73.5, 48], ['student2', 76.5, 48], ['student3', 82.5, 48], ['student1', 85.5, 48], ['student3', 74.5, 50.5], ['student2', 84.5, 50.5]]) {
+  for (const [who, x, y] of [['student1', 73.5, 46.5], ['student2', 76.5, 46.5], ['student3', 82.5, 46.5], ['student1', 85.5, 46.5], ['student3', 74.5, 48.5], ['student2', 84.5, 48.5]]) {
     addActor(who, x, y, 'up', 1);
   }
-  if (flags.dadComes) addActor('dad', 77.5, 52.6, 'up', 1);
-  if (flags.dohyunTestify) addActor('principal', 88.5, 48, 'up', 1);
-  if (route.heart.minkyung >= 1) addActor('teacher', 70.5, 48, 'up', 1);
+  if (flags.dadComes) addActor('dad', 77.5, 50.6, 'up', 1);
+  if (flags.dohyunTestify) addActor('principal', 88.5, 46.5, 'up', 1);
+  if (route.heart.minkyung >= 1) addActor('teacher', 70.5, 46.5, 'up', 1);
 }
 
 // 넷째 날 점심: 하율과 함께 (기본은 3층 신문부실), 교무실엔 교장 선생님
@@ -2810,7 +2812,7 @@ const SCRIPTS = {
       );
       await new Promise(r => fadeTo(() => { fade.dir = 0; r(); }));
     }
-    await showChapter('혜성이 지나간 밤\n\n— 끝 —', 3);
+    await showChapter('혜성이 지나갔던 밤에\n\n— 끝 —', 3);
     await showChapter('제작자: 사람', 3.5);
     // 처음 화면으로 (저장은 지운다)
     Save.clear();
@@ -3057,6 +3059,10 @@ const findClue = name => { const c = CLUES.find(k => k.name === name); if (c) c.
 
 function devStage(stage) {
   stopStory();
+  // 앞 장면의 분위기(강연장 조명·연기·기억 속 모습)가 남지 않게
+  ambient = null;
+  smoke = null;
+  setPlayerLook(null);
   resetFlags();
   for (const c of CLUES) c.found = false;
   if (stage === 'title') {

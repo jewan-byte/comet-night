@@ -177,6 +177,7 @@ function fadeIn(done = null) {
 // to: { x, y, dir } — x, y 는 픽셀/16 (y는 발밑)
 function setFloor(n, to) {
   floor = FLOORS[n];
+  camFocus = null;
   player.x = to.x * TILE;
   player.y = to.y * TILE;
   player.dir = to.dir;
@@ -280,7 +281,8 @@ function openDialog(pages, choice = null) {
   dialog.choice = choice;
   // 캐릭터가 화면 아래쪽에 있으면 대사창을 위로
   const screenY = Math.round(player.y) - camera.y;
-  dialogBox.classList.toggle('top', screenY > VIEW_H * 0.6);
+  // 화면을 고정한 컷신에선 위쪽(무대 등)을 가리지 않게 늘 아래에
+  dialogBox.classList.toggle('top', !camFocus && screenY > VIEW_H * 0.6);
   dialogBox.classList.add('open');
   updateDialog(0);
   return new Promise(resolve => { dialog.resolve = resolve; });
@@ -649,6 +651,7 @@ function update(dt) {
 
 // ── 그리기 ──
 const camera = { x: 0, y: 0 };
+let camFocus = null;   // 컷신에서 화면을 한 자리에 고정할 때 (픽셀 좌표). 층을 옮기면 풀린다
 
 // 맵이 화면보다 작으면 가운데, 크면 캐릭터를 따라가되 맵 밖은 안 보이게
 function follow(center, mapSize, view) {
@@ -659,8 +662,8 @@ function follow(center, mapSize, view) {
 function draw() {
   const px = Math.round(player.x), py = Math.round(player.y);
   const mapW = floor.map.w * TILE, mapH = floor.map.h * TILE;
-  const camX = camera.x = follow(px, mapW, VIEW_W);
-  const camY = camera.y = follow(py - 12, mapH, VIEW_H);
+  const camX = camera.x = follow(camFocus ? camFocus.x : px, mapW, VIEW_W);
+  const camY = camera.y = follow(camFocus ? camFocus.y : py - 12, mapH, VIEW_H);
 
   g.fillStyle = '#000';
   g.fillRect(0, 0, VIEW_W, VIEW_H);
