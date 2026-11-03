@@ -886,6 +886,10 @@ const SCRIPTS = {
 
   // 아빠에게 말 걸기 (식탁)
   async dad() {
+    if (flags.day4Evening && !flags.gotPages) {
+      await say('아빠는 식탁에 엎드려 졸고 있다. 깨우지 않는 게 좋겠다.');
+      return;
+    }
     if (flags.day2Evening) {
       await say(
         flags.toldDad
@@ -2343,8 +2347,10 @@ const SCRIPTS = {
       ['"내일 강연에 와 주세요. 이번엔 같이 서 주세요."', '"와 주실 거죠? 아빠한테 빚지셨잖아요."'],
     ) === 0;
     if (sincere) {
+      // 마지막 기회: 진심으로 부르면 앞선 말다툼과 상관없이 증언을 약속한다
       if (!flags.dohyunTestify) addHeart('dohyun', 2);
-      if (route.heart.dohyun >= 2) flags.dohyunTestify = true;
+      route.heart.dohyun = Math.max(route.heart.dohyun, 2);
+      flags.dohyunTestify = true;
       await say(
         { who: '교장 선생님', text: '……같이, 라.' },
         { who: '교장 선생님', text: '40년 전엔 정우가 혼자 섰지. 이번엔— 그래. 가마.' },
@@ -2460,16 +2466,26 @@ const SCRIPTS = {
     );
     // 아빠가 왔다면: 강연 직전, 40년 동안 침묵한 이유
     if (flags.dadComes) {
+      await say('맨 뒷줄, 낯익은 외투. 아빠가 빛찬의 옆자리에 와 앉았다.');
+      if (!flags.toldDad) {
+        await say(
+          { who: ME, text: '아빠. 도현 선생님이 다 말했어. 그날 밤 암실에 박영철 선생님이 있었고, 원판을 가져갔대.' },
+          '아빠는 눈을 감았다가, 천천히 떴다.',
+        );
+      }
       await say(
-        '맨 뒷줄, 낯익은 외투. 아빠가 빛찬의 옆자리에 와 앉았다.',
-        { who: '아빠', text: '…약속했지. 다 얘기하겠다고.' },
+        flags.toldDad ? { who: '아빠', text: '…약속했지. 다 얘기하겠다고.' } : { who: '아빠', text: '…그럼 나도, 다 얘기하마.' },
         { who: '아빠', text: '그날 밤, 뜯긴 장엔 "도현이가 준비실에 갔다"는 기록이 있었어. 그래서 뜯었다. 도현이를 지키려고.' },
         { who: '아빠', text: '박 선생님이 원판을 가져간 건 몰랐어. 1987년, 신문에서 "박영철 혜성"을 보고서야 알았지.' },
         { who: '아빠', text: '그걸 밝히려면, 이 장을 내밀어야 했어. 그럼 도현이가 그날 밤 거기 있었다는 것도 드러나고.' },
         { who: '아빠', text: '…그래서 입을 다물었다. 40년을.' },
         { who: ME, text: '그럼 지금은, 왜?' },
-        { who: '아빠', text: '도현이가 먼저 말했다며. 그리고— 2061년까지 기다릴 수는 없잖아.' },
+        { who: '아빠', text: '도현이가 먼저 말했잖니. 그리고— 2061년까지 기다릴 수는 없잖아.' },
       );
+      // 아빠의 마음이 아직 모자라면: 혼자 먼저 일어설 자신은 없다는 신호
+      if (route.heart.dad < 3) {
+        await say({ who: '아빠', text: '…솔직히, 저 앞에 혼자 설 자신은 없다. 네가 먼저 일어서 주면, 따라가마.' });
+      }
       flags.dadConfessed = true;
     }
     if (flags.dohyunTestify) await say('객석 옆쪽, 이도현 교장 선생님이 굳은 얼굴로 무대를 보고 있다. 눈이 마주치자 짧게 고개를 끄덕였다.');
@@ -2512,6 +2528,19 @@ const SCRIPTS = {
   // 공개 반박: 마지막 검증 → "현상은 내가 했다" → 증인들이 차례로 선다
   async finalPublic() {
     await say('빛찬은 자리에서 일어나 손을 들었다.', { who: '박영철', text: '…질문인가, 학생?' }, { who: ME, text: '그 사진, 박사님이 찍은 게 아니에요.' });
+    // 사진의 출처를 아직 못 알아봤다면: 한 번 더 들여다볼 기회
+    if (!flags.spottedNotch) {
+      await say({ who: '박영철', text: '내가 찍은 게 아니라고? 그럼 누구 거란 말인가. 근거가 있나?' }, '스크린의 사진을 다시 올려다보았다.');
+      const again = await choose(['…어디가 천문부 원판이라는 표시지?'], ['핼리 옆의 흐릿한 꼬리', '모서리의 V자 흠과 "#9"', '사진 아래의 서명']);
+      if (again === 1) {
+        flags.spottedNotch = true;
+        LECTURE_PHOTO.found = true;
+        Toast.show(`새 단서: ${LECTURE_PHOTO.name}  (Tab)`);
+        await say('모서리의 V자 흠. 그리고 "#9". 깨진 돌기가 남기는 바로 그 흠.');
+      } else {
+        await say('…말이 막혔다. 출처를 짚지 못한 채, 날짜라도 증명해야 한다.');
+      }
+    }
     const run = storyRun;
     await Experiment.start(EXPERIMENTS.orbit);
     alive(run);
@@ -2546,8 +2575,11 @@ const SCRIPTS = {
         { who: '아빠', text: '이름은 됐습니다. 다만— 그 일주일이 있었다는 것만은, 돌려받고 싶습니다.' },
       );
     }
-    if (support === 0) return SCRIPTS.endingBuried('public');
-    return SCRIPTS.endingName();
+    // 엔딩 1: 사진의 출처(V자 흠·#9)를 짚었고, 절취·추적을 뒷받침할 사람이 섰다 (도현의 증언 또는 아빠)
+    // 민경의 정정은 화재 누명을 벗기지만 절취의 증언은 아니다 — 지지자 수에만 보탠다
+    const backed = flags.dohyunTestify || flags.dadComes;
+    if (flags.spottedNotch && backed) return SCRIPTS.endingName();
+    return SCRIPTS.endingBuried(support ? 'publicHalf' : 'public');
   },
 
   // 따로 만남: 무대 뒤에서 같은 자료로 무엇을 바로잡을지 협상한다
@@ -2583,8 +2615,9 @@ const SCRIPTS = {
       { who: '박영철', text: '…이도현 일은, 내가 협박한 게 맞다. 그것도 보고서에 쓰지.' },
       '박사는 오래 사진기를 쓰다듬다가, 천천히 고개를 끄덕였다.',
     );
+    // 정정은 성사됐다. 옥상에 셋이 오를 수 있는지는 아빠와 도현의 마음에 달렸다
     const reconcile = route.heart.dad >= 2 && (flags.dohyunTestify || route.heart.dohyun >= 2);
-    return reconcile ? SCRIPTS.endingRoof() : SCRIPTS.endingBuried('private');
+    return reconcile ? SCRIPTS.endingRoof() : SCRIPTS.endingBuried('privateDeal');
   },
 
   // 아빠에게 맡김: 아빠의 마음이 충분하면 아빠가 일어선다
@@ -2605,14 +2638,17 @@ const SCRIPTS = {
       { who: '아빠', text: '그 혜성, 우리가 일주일 동안 쫓았습니다. 여기 기록이 있습니다. 그리고 그날 새벽의 원판도.' },
       '빛찬은 원판 #12를 높이 들었다. 스크린의 "첫 사진"과 같은 V자 흠이, 객석에도 보였다.',
     );
-    if (route.evidence >= 10 && flags.dohyunTestify) {
+    if (flags.dohyunTestify) {
       await say(
         '이도현 교장 선생님이 아빠 옆에 나란히 섰다.',
         { who: '교장 선생님', text: '그날 밤 암실엔 박 선생님이 계셨습니다. 제가 봤습니다.' },
       );
-      return SCRIPTS.endingName();
+      // 사진의 출처까지 짚었고 증거가 충분하면 공개 정정, 아니면 두 사람의 화해
+      if (flags.spottedNotch && route.evidence >= 10) return SCRIPTS.endingName();
+      return SCRIPTS.endingRoof();
     }
-    return SCRIPTS.endingRoof();
+    if (route.heart.dohyun >= 2) return SCRIPTS.endingRoof();
+    return SCRIPTS.endingBuried('dadAlone');
   },
 
   // ── 엔딩 ──
@@ -2710,6 +2746,23 @@ const SCRIPTS = {
         { who: '박영철', text: '학생, 상상력은 좋은데. 증언할 사람 하나 없는 이야기는 이야기일 뿐이야.' },
         '객석에서 웃음이 번졌다. 강연은 박수 속에 끝났다.',
       );
+    } else if (how === 'publicHalf') {
+      await say(
+        { who: '박영철', text: '감동적인 증언이군. 하지만 그 사진이 천문부 것이라는 근거는? 날짜가 맞다고 원판 주인이 바뀌진 않아.' },
+        '…그 사진의 출처를 짚지 못했다. 강연장은 술렁인 채로 끝났다.',
+        '누군가는 믿었고, 누군가는 학생들의 소동이라 했다.',
+      );
+    } else if (how === 'privateDeal') {
+      await say(
+        '박사의 정정 보고서는 한 달 뒤, 조용히 발송됐다. "공동 발견자 — 동사란고 천문부."',
+        '하지만 그날 밤, 옥상에 함께 오를 사람들은 아직 서로를 마주하지 못했다.',
+      );
+    } else if (how === 'dadAlone') {
+      await say(
+        { who: '박영철', text: '정우, 40년 만에 나타나서 한다는 말이 그건가. 증인은 있나?' },
+        '아무도 아빠 옆에 서지 않았다. 그래도 아빠는 끝까지 자리에 앉지 않았다.',
+        '…빛찬은 그 등을, 오래 기억할 것 같았다.',
+      );
     }
     await new Promise(r => fadeTo(() => {
       fade.dir = 0;
@@ -2749,7 +2802,7 @@ const SCRIPTS = {
       const warm = route.heart.dad >= 2;
       await say(
         '35년 뒤, 같은 옥상.',
-        { who: '아빠', text: '…봐라. 76년 만이다. 핼리.' },
+        { who: '아빠', text: '…봐라. 다시 돌아왔구나. 핼리.' },
         { who: ME, text: '아빠가 열여덟 살 때 본 거.' },
         { who: '아빠', text: '그날 옥상에서 그랬지. 다음엔 내 애랑 같이 보겠다고.' },
         warm ? { who: '아빠', text: '……지켰다.' } : { who: '아빠', text: '…늦었지만, 지켰구나.' },
