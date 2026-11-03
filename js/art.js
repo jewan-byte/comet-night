@@ -1082,12 +1082,12 @@ const PEOPLE = {
     pal: { ...PLAYER_PAL, hair: '#7a4128', hairHi: '#a85e38' },
     camera: true,
   },
-  // 오미녕 선생님: 과학 교사, 1986년 학보 기자·목격자. 쑥색 카디건
+  // 김연수 선생님: 과학 교사, 1986년 학보 기자·목격자. 쑥색 카디건
   teacher: {
     pal: { ...PLAYER_PAL, hair: '#2a1e1a', hairHi: '#4a3428', blazer: '#5f7a6a', blazerDk: '#4a6254', shirt: '#f0ece2', pants: '#3a3a44', pantsDk: '#2e2e36' },
     tie: false,
   },
-  // 1986년의 오미녕 (1학년, 신문부 기자): 짙은 남색 교복, 넥타이 대신 노란 리본
+  // 1986년의 김연수 (1학년, 신문부 기자): 짙은 남색 교복, 넥타이 대신 노란 리본
   minkyung86: {
     pal: { ...PLAYER_PAL, hair: '#1e1612', hairHi: '#3a2a20', blazer: '#3a3f5e', blazerDk: '#2a2e48', tie: '#d9b43a' },
   },

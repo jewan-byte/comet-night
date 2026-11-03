@@ -28,7 +28,7 @@ function pastCore(b, { up, down, roof }) {
   }
   b.obj('rail', 33, 25, 1, 7);
   if (up) b.warp(30, 30, 4, 2, { floor: PAST(n + 1), x: 36, y: 25, dir: 'up' });
-  // 옥상 계단: 오미녕의 기억에선 4시 전까지 잠겨 있다 (story.js 의 pastRoof)
+  // 옥상 계단: 김연수의 기억에선 4시 전까지 잠겨 있다 (story.js 의 pastRoof)
   if (roof) b.warps.push({ x: 30, y: 30, w: 4, h: 2, script: 'pastRoof' });
   if (down) {
     b.carve(34, 25, 4, 7, 'stairsDown');
@@ -211,7 +211,7 @@ function buildPast2F() {
     b.obj('stool', sx, 29);
   }
   b.obj('boombox', 14, 23, 2, 1, look('커다란 라디오 카세트 녹음기. 빨간 녹음 불이 깜빡인다.', '카운터 숫자가 천천히 올라가고 있다.'));
-  // 오미녕의 기억: 음악실에 들어서면 관악부 선배들 장면
+  // 김연수의 기억: 음악실에 들어서면 관악부 선배들 장면
   b.warps.push({ x: 2, y: 22, w: 26, h: 9, script: 'mkMusic', once: 'mkMusic' });
 
   // 이이노의 기억: 2층 계단참을 지날 때마다 음악실 관악부가 말을 건다 (story.js 의 pastHall2)
@@ -280,7 +280,7 @@ function buildPastRoof() {
   b.obj('stool', 20, 11);
   b.obj('lampstool', 24, 11, 1, 1, look('의자 위에서 알코올램프가 조용히 타고 있다.', '렌즈에 이슬이 맺히지 않게 켜 둔 거라고 했다.'));
   b.obj('stool', 26, 11);
-  // 오미녕의 기억: 옥상에 올라오면 인터뷰 장면
+  // 김연수의 기억: 옥상에 올라오면 인터뷰 장면
   b.warps.push({ x: 2, y: 3, w: 36, h: 19, script: 'mkRoof', once: 'mkRoof' });
   b.light(7, 8.5, 22, '255,210,140');   // 천문대 문틈으로 새는 불빛
 

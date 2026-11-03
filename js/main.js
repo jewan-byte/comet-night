@@ -54,7 +54,7 @@ for (const key of ['home', 1, 2, 3]) {
     CLUES.push(s.clue);
   }
 }
-// 회상 속에선 다른 사람(예: 1986년의 오미녕)이 된다 — who: PEOPLE 이름, null 이면 비찬
+// 회상 속에선 다른 사람(예: 1986년의 김연수)이 된다 — who: PEOPLE 이름, null 이면 비찬
 let playerFrames = makePlayerFrames();
 function setPlayerLook(who) {
   playerFrames = who ? makePersonFrames(PEOPLE[who].pal, PEOPLE[who]) : makePlayerFrames();
@@ -759,7 +759,7 @@ function draw() {
       `FPS ${Math.round(fps)}  (프레임 ${(1000 / fps).toFixed(1)}ms)\n` +
       `${floor.map.label} [${floor.map.n}]  타일 ${tx},${ty}  ${currentRegion ? currentRegion.name : '-'}\n` +
       `단서 ${CLUES.filter(c => c.found).length}/${CLUES.length}  컷신 ${cutscene ? 'O' : 'X'}\n` +
-      `숨은 값: 증거 ${route.evidence} · 기사 ${route.article} · 마음 미녕 ${route.heart.minkyung} 이노 ${route.heart.dohyun} 아빠 ${route.heart.dad}\n` +
+      `숨은 값: 증거 ${route.evidence} · 기사 ${route.article} · 마음 연수 ${route.heart.minkyung} 이노 ${route.heart.dohyun} 아빠 ${route.heart.dad}\n` +
       `플래그: ${on || '-'}`,
     );
   }
